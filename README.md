@@ -3,7 +3,7 @@
 ## 1\. Thông tin chung
 
 * **Nền tảng:** WinForms .NET 10
-* **Công nghệ:** Entity Framework Core (SQL Server), Dependency Injection, Repository Pattern.
+* **Công nghệ:** Entity Framework Core (SQL Server), Dependency Injection, Repository Pattern, Realtaiizor cho phần tạo UI.
 * **Kiến trúc:** 3-Tier (DAL - BLL - GUI) tách Project độc lập.
 * **Mục tiêu:** Quản lý toàn diện cửa hàng phụ kiện máy tính theo quy trình nghiệp vụ khép kín từ nhập kho, bán hàng, xuất hóa đơn, đổi trả đến nhân sự và báo cáo.
 * **Nhóm người dùng (4 Roles):** Admin, Quản lý, Nhân viên bán hàng, Nhân viên kho.
