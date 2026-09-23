@@ -2,5 +2,5 @@
   <Project Path="BLL/BLL.csproj" Id="c0b1850b-a953-47b5-8efe-0e9ae54bf644" />
   <Project Path="DAL/DAL.csproj" Id="695a98d9-2023-407b-9af5-e34bc04ce97a" />
   <Project Path="DTO/Common.csproj" Id="fa012aa9-a555-4600-93c8-1758da90887c" />
-  <Project Path="GUI/GUI.csproj" />
+  <Project Path="GUI/GUI.csproj" Id="64f887a6-706d-42f0-a63c-9864fe39f053" />
 </Solution>

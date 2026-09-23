@@ -1,9 +1,16 @@
-﻿namespace GUI.Forms.Auth
+﻿namespace GUI.Auth
 {
     partial class LoginForm
     {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -15,165 +22,162 @@
 
         #region Windows Form Designer generated code
 
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-            SiticoneBorderlessForm1 = new Siticone.Desktop.UI.WinForms.SiticoneBorderlessForm(components);
-            SiticoneControlBox1 = new Siticone.Desktop.UI.WinForms.SiticoneControlBox();
-            txtPassword = new Siticone.Desktop.UI.WinForms.SiticoneTextBox();
-            txtUsername = new Siticone.Desktop.UI.WinForms.SiticoneTextBox();
-            chkRememberMe = new Siticone.Desktop.UI.WinForms.SiticoneToggleSwitch();
-            lblRemenberMe = new Label();
-            btnLogin = new Siticone.Desktop.UI.WinForms.SiticoneButton();
-            SiticoneHtmlLabel1 = new Siticone.Desktop.UI.WinForms.SiticoneHtmlLabel();
+            txtPassword = new ReaLTaiizor.Controls.MaterialTextBoxEdit();
+            txtUsername = new ReaLTaiizor.Controls.MaterialTextBoxEdit();
+            btnLogin = new ReaLTaiizor.Controls.HopeRoundButton();
+            label1 = new Label();
+            lklblFogotPw = new ReaLTaiizor.Controls.FoxLinkLabel();
+            lklblSignup = new ReaLTaiizor.Controls.FoxLinkLabel();
             SuspendLayout();
-            // 
-            // SiticoneBorderlessForm1
-            // 
-            SiticoneBorderlessForm1.BorderRadius = 15;
-            SiticoneBorderlessForm1.ContainerControl = this;
-            SiticoneBorderlessForm1.DockIndicatorTransparencyValue = 0.6D;
-            SiticoneBorderlessForm1.TransparentWhileDrag = true;
-            // 
-            // SiticoneControlBox1
-            // 
-            SiticoneControlBox1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            SiticoneControlBox1.FillColor = Color.FromArgb(139, 152, 166);
-            SiticoneControlBox1.IconColor = Color.White;
-            SiticoneControlBox1.Location = new Point(743, -2);
-            SiticoneControlBox1.Name = "SiticoneControlBox1";
-            SiticoneControlBox1.Size = new Size(56, 36);
-            SiticoneControlBox1.TabIndex = 0;
             // 
             // txtPassword
             // 
-            txtPassword.BackColor = Color.Transparent;
-            txtPassword.BorderRadius = 8;
-            txtPassword.DefaultText = "";
-            txtPassword.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
-            txtPassword.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
-            txtPassword.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
-            txtPassword.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
-            txtPassword.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
-            txtPassword.Font = new Font("Segoe UI", 9F);
-            txtPassword.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
-            txtPassword.Location = new Point(261, 228);
-            txtPassword.Margin = new Padding(3, 4, 3, 4);
+            txtPassword.AnimateReadOnly = false;
+            txtPassword.AutoCompleteMode = AutoCompleteMode.None;
+            txtPassword.AutoCompleteSource = AutoCompleteSource.None;
+            txtPassword.BackgroundImageLayout = ImageLayout.None;
+            txtPassword.CharacterCasing = CharacterCasing.Normal;
+            txtPassword.Depth = 0;
+            txtPassword.Font = new Font("Microsoft Sans Serif", 20F, FontStyle.Regular, GraphicsUnit.Pixel);
+            txtPassword.HideSelection = true;
+            txtPassword.Hint = "Mật khẩu";
+            txtPassword.LeadingIcon = null;
+            txtPassword.Location = new Point(249, 222);
+            txtPassword.MaxLength = 32767;
+            txtPassword.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
             txtPassword.Name = "txtPassword";
-            txtPassword.PasswordChar = '●';
-            txtPassword.PlaceholderText = "Mật khẩu";
+            txtPassword.PasswordChar = '\0';
+            txtPassword.PrefixSuffixText = null;
+            txtPassword.ReadOnly = false;
+            txtPassword.RightToLeft = RightToLeft.No;
             txtPassword.SelectedText = "";
-            txtPassword.Size = new Size(286, 60);
+            txtPassword.SelectionLength = 0;
+            txtPassword.SelectionStart = 0;
+            txtPassword.ShortcutsEnabled = true;
+            txtPassword.Size = new Size(312, 60);
             txtPassword.TabIndex = 1;
-            txtPassword.UseSystemPasswordChar = true;
+            txtPassword.TabStop = false;
+            txtPassword.TextAlign = HorizontalAlignment.Left;
+            txtPassword.TrailingIcon = null;
+            txtPassword.UseSystemPasswordChar = false;
             // 
             // txtUsername
             // 
-            txtUsername.BackColor = Color.Transparent;
-            txtUsername.BorderRadius = 8;
-            txtUsername.DefaultText = "";
-            txtUsername.DisabledState.BorderColor = Color.FromArgb(208, 208, 208);
-            txtUsername.DisabledState.FillColor = Color.FromArgb(226, 226, 226);
-            txtUsername.DisabledState.ForeColor = Color.FromArgb(138, 138, 138);
-            txtUsername.DisabledState.PlaceholderForeColor = Color.FromArgb(138, 138, 138);
-            txtUsername.FocusedState.BorderColor = Color.FromArgb(94, 148, 255);
-            txtUsername.Font = new Font("Segoe UI", 9F);
-            txtUsername.HoverState.BorderColor = Color.FromArgb(94, 148, 255);
-            txtUsername.Location = new Point(261, 137);
-            txtUsername.Margin = new Padding(3, 4, 3, 4);
+            txtUsername.AnimateReadOnly = false;
+            txtUsername.AutoCompleteMode = AutoCompleteMode.None;
+            txtUsername.AutoCompleteSource = AutoCompleteSource.None;
+            txtUsername.BackgroundImageLayout = ImageLayout.None;
+            txtUsername.CharacterCasing = CharacterCasing.Normal;
+            txtUsername.Depth = 0;
+            txtUsername.Font = new Font("Microsoft Sans Serif", 20F, FontStyle.Regular, GraphicsUnit.Pixel);
+            txtUsername.HideSelection = true;
+            txtUsername.Hint = "Tên đăng nhập";
+            txtUsername.LeadingIcon = null;
+            txtUsername.Location = new Point(249, 139);
+            txtUsername.MaxLength = 32767;
+            txtUsername.MouseState = ReaLTaiizor.Helper.MaterialDrawHelper.MaterialMouseState.OUT;
             txtUsername.Name = "txtUsername";
             txtUsername.PasswordChar = '\0';
-            txtUsername.PlaceholderText = "Tên Đăng Nhập";
+            txtUsername.PrefixSuffixText = null;
+            txtUsername.ReadOnly = false;
+            txtUsername.RightToLeft = RightToLeft.No;
             txtUsername.SelectedText = "";
-            txtUsername.Size = new Size(286, 60);
+            txtUsername.SelectionLength = 0;
+            txtUsername.SelectionStart = 0;
+            txtUsername.ShortcutsEnabled = true;
+            txtUsername.Size = new Size(312, 60);
             txtUsername.TabIndex = 2;
-            // 
-            // chkRememberMe
-            // 
-            chkRememberMe.BackColor = Color.Transparent;
-            chkRememberMe.CheckedState.BorderColor = Color.FromArgb(94, 148, 255);
-            chkRememberMe.CheckedState.FillColor = Color.FromArgb(94, 148, 255);
-            chkRememberMe.CheckedState.InnerBorderColor = Color.White;
-            chkRememberMe.CheckedState.InnerColor = Color.White;
-            chkRememberMe.Location = new Point(451, 307);
-            chkRememberMe.Name = "chkRememberMe";
-            chkRememberMe.Size = new Size(44, 25);
-            chkRememberMe.TabIndex = 3;
-            chkRememberMe.UncheckedState.BorderColor = Color.FromArgb(125, 137, 149);
-            chkRememberMe.UncheckedState.FillColor = Color.FromArgb(125, 137, 149);
-            chkRememberMe.UncheckedState.InnerBorderColor = Color.White;
-            chkRememberMe.UncheckedState.InnerColor = Color.White;
-            // 
-            // lblRemenberMe
-            // 
-            lblRemenberMe.AutoSize = true;
-            lblRemenberMe.BackColor = Color.Transparent;
-            lblRemenberMe.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            lblRemenberMe.Location = new Point(261, 304);
-            lblRemenberMe.Name = "lblRemenberMe";
-            lblRemenberMe.Size = new Size(184, 28);
-            lblRemenberMe.TabIndex = 4;
-            lblRemenberMe.Text = "Ghi nhớ đăng nhập:";
+            txtUsername.TabStop = false;
+            txtUsername.TextAlign = HorizontalAlignment.Left;
+            txtUsername.TrailingIcon = null;
+            txtUsername.UseSystemPasswordChar = false;
             // 
             // btnLogin
             // 
-            btnLogin.BackColor = Color.Transparent;
-            btnLogin.BorderRadius = 8;
-            btnLogin.DisabledState.BorderColor = Color.DarkGray;
-            btnLogin.DisabledState.CustomBorderColor = Color.DarkGray;
-            btnLogin.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
-            btnLogin.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
-            btnLogin.Font = new Font("Segoe UI", 9F);
-            btnLogin.ForeColor = Color.White;
-            btnLogin.HoverState.FillColor = SystemColors.ActiveCaption;
-            btnLogin.Location = new Point(296, 354);
+            btnLogin.BorderColor = Color.FromArgb(220, 223, 230);
+            btnLogin.ButtonType = ReaLTaiizor.Util.HopeButtonType.Primary;
+            btnLogin.DangerColor = Color.FromArgb(245, 108, 108);
+            btnLogin.DefaultColor = Color.FromArgb(255, 255, 255);
+            btnLogin.Font = new Font("Segoe UI", 12F);
+            btnLogin.HoverTextColor = Color.FromArgb(48, 49, 51);
+            btnLogin.InfoColor = Color.FromArgb(144, 147, 153);
+            btnLogin.Location = new Point(312, 337);
             btnLogin.Name = "btnLogin";
-            btnLogin.Size = new Size(225, 56);
-            btnLogin.TabIndex = 5;
-            btnLogin.Text = "ĐĂNG NHẬP";
-            btnLogin.Click += btnLogin_Click;
+            btnLogin.PrimaryColor = Color.FromArgb(64, 158, 255);
+            btnLogin.Size = new Size(164, 50);
+            btnLogin.SuccessColor = Color.FromArgb(103, 194, 58);
+            btnLogin.TabIndex = 3;
+            btnLogin.Text = "Đăng nhập";
+            btnLogin.TextColor = Color.White;
+            btnLogin.WarningColor = Color.FromArgb(230, 162, 60);
             // 
-            // SiticoneHtmlLabel1
+            // label1
             // 
-            SiticoneHtmlLabel1.BackColor = Color.Transparent;
-            SiticoneHtmlLabel1.Font = new Font("Segoe UI", 19.8000011F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            SiticoneHtmlLabel1.Location = new Point(207, 52);
-            SiticoneHtmlLabel1.Name = "SiticoneHtmlLabel1";
-            SiticoneHtmlLabel1.Size = new Size(381, 47);
-            SiticoneHtmlLabel1.TabIndex = 6;
-            SiticoneHtmlLabel1.Text = "ĐĂNG NHẬP HỆ THỐNG";
-            SiticoneHtmlLabel1.TextAlignment = ContentAlignment.MiddleCenter;
+            label1.AutoSize = true;
+            label1.Font = new Font("Segoe UI", 19.8000011F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label1.Location = new Point(224, 58);
+            label1.Name = "label1";
+            label1.Size = new Size(353, 46);
+            label1.TabIndex = 4;
+            label1.Text = "TRANG ĐĂNG NHẬP";
+            // 
+            // lklblFogotPw
+            // 
+            lklblFogotPw.BackColor = Color.Transparent;
+            lklblFogotPw.DownColor = Color.FromArgb(255, 149, 0);
+            lklblFogotPw.EnabledCalc = true;
+            lklblFogotPw.Font = new Font("Segoe UI", 10F);
+            lklblFogotPw.ForeColor = Color.FromArgb(0, 149, 221);
+            lklblFogotPw.Location = new Point(249, 288);
+            lklblFogotPw.Name = "lklblFogotPw";
+            lklblFogotPw.OverColor = Color.FromArgb(23, 140, 229);
+            lklblFogotPw.Size = new Size(129, 27);
+            lklblFogotPw.TabIndex = 6;
+            lklblFogotPw.Text = "Quên mật khẩu";
+            // 
+            // lklblSignup
+            // 
+            lklblSignup.BackColor = Color.Transparent;
+            lklblSignup.DownColor = Color.FromArgb(255, 149, 0);
+            lklblSignup.EnabledCalc = true;
+            lklblSignup.Font = new Font("Segoe UI", 10F);
+            lklblSignup.ForeColor = Color.FromArgb(0, 149, 221);
+            lklblSignup.Location = new Point(488, 288);
+            lklblSignup.Name = "lklblSignup";
+            lklblSignup.OverColor = Color.FromArgb(23, 140, 229);
+            lklblSignup.Size = new Size(73, 27);
+            lklblSignup.TabIndex = 7;
+            lklblSignup.Text = "Đăng ký";
             // 
             // LoginForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            BackgroundImage = Properties.Resources.dried_leaf_frame_botanical_background;
-            BackgroundImageLayout = ImageLayout.Stretch;
             ClientSize = new Size(800, 450);
-            Controls.Add(SiticoneHtmlLabel1);
+            Controls.Add(lklblSignup);
+            Controls.Add(lklblFogotPw);
+            Controls.Add(label1);
             Controls.Add(btnLogin);
-            Controls.Add(lblRemenberMe);
-            Controls.Add(chkRememberMe);
             Controls.Add(txtUsername);
             Controls.Add(txtPassword);
-            Controls.Add(SiticoneControlBox1);
-            FormBorderStyle = FormBorderStyle.None;
             Name = "LoginForm";
-            Text = "LoginForm";
+            Text = "Đăng nhập hệ thống";
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-
-        private Siticone.Desktop.UI.WinForms.SiticoneBorderlessForm SiticoneBorderlessForm1;
-        private Siticone.Desktop.UI.WinForms.SiticoneTextBox txtUsername;
-        private Siticone.Desktop.UI.WinForms.SiticoneTextBox txtPassword;
-        private Siticone.Desktop.UI.WinForms.SiticoneControlBox SiticoneControlBox1;
-        private Siticone.Desktop.UI.WinForms.SiticoneButton btnLogin;
-        private System.Windows.Forms.Label lblRemenberMe;
-        private Siticone.Desktop.UI.WinForms.SiticoneToggleSwitch chkRememberMe;
-        private Siticone.Desktop.UI.WinForms.SiticoneHtmlLabel SiticoneHtmlLabel1;
+        private ReaLTaiizor.Controls.MaterialTextBoxEdit txtPassword;
+        private ReaLTaiizor.Controls.MaterialTextBoxEdit txtUsername;
+        private ReaLTaiizor.Controls.HopeRoundButton btnLogin;
+        private Label label1;
+        private ReaLTaiizor.Controls.FoxLinkLabel lklblFogotPw;
+        private ReaLTaiizor.Controls.FoxLinkLabel lklblSignup;
     }
 }

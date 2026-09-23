@@ -1,20 +1,21 @@
-using GUI.Forms.Auth;
+﻿using GUI.Auth;
 using System;
 using System.Windows.Forms;
 
-namespace TestLibrary
+namespace GUI
 {
     internal static class Program
     {
         /// <summary>
-        ///  The main entry point for the application.
+        /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
+
+            // Khởi chạy LoginForm đầu tiên. 
+            // Nếu file LoginForm nằm trong thư mục Forms/Auth, hãy gõ đúng đường dẫn:
             Application.Run(new LoginForm());
         }
     }
