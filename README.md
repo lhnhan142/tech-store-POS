@@ -19,41 +19,64 @@
 
 ## 3\. Cấu trúc Solution chuẩn (Architecture)
 
+## Cấu trúc Solution chuẩn (Architecture)
+
 ```text
 PhuKienMayTinhSolution (Blank Solution)
 │
 ├── 1. DAL (Data Access Layer - Class Library)
-│   ├── Entities/                 # Models map bảng CSDL (User, Product, Order, Inventory...)
-│   ├── Context/                  # AppDbContext.cs (Cấu hình EF Core \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\& DbSets)
-│   ├── Repositories/
-│   │   ├── Interfaces/           # IRepository<T>, IProductRepository...
-│   │   └── Implementations/      # Repository<T>, ProductRepository...
-│   └── Migrations/               # Thư mục sinh tự động khi chạy Add-Migration
+│   ├── Entities/                 # Models ánh xạ thành các bảng trong CSDL SQL Server
+│   │   ├── Attendance.cs         # Quản lý chấm công nhân viên
+│   │   ├── Category.cs           # Danh mục sản phẩm
+│   │   ├── Customer.cs           # Thông tin khách hàng & điểm thưởng
+│   │   ├── InventoryReceipt.cs   # Hóa đơn nhập kho
+│   │   ├── InventoryReceiptDetail.cs # Chi tiết nhập kho
+│   │   ├── Order.cs              # Hóa đơn bán hàng (POS)
+│   │   ├── OrderDetail.cs        # Chi tiết hóa đơn bán hàng
+│   │   ├── Product.cs            # Thông tin sản phẩm (có Barcode, giá, tồn kho)
+│   │   ├── Role.cs               # Phân quyền hệ thống (Admin, Quản lý, Kho, Bán hàng)
+│   │   ├── Supplier.cs           # Thông tin nhà cung cấp
+│   │   └── User.cs               # Tài khoản người dùng hệ thống
+│   ├── Context/
+│   │   └── AppDbContext.cs       # Cấu hình EF Core, chứa chuỗi kết nối và DbSets
+│   ├── Repositories/             # Nơi chứa logic truy xuất CSDL (Repository Pattern)
+│   │   ├── Interfaces/           # Các giao thức (Abstract)
+│   │   │   ├── IRepository.cs    # Generic interface chứa CRUD cơ bản (Thêm, sửa, xóa, tìm kiếm)
+│   │   │   ├── IOrderRepository.cs
+│   │   │   ├── IProductRepository.cs
+│   │   │   └── IUserRepository.cs
+│   │   └── Implementations/      # Các lớp thực thi thao tác DB bằng EF Core
+│   │       ├── Repository.cs     # Thực thi CRUD dùng chung
+│   │       ├── ProductRepository.cs
+│   │       └── UserRepository.cs
+│   └── Migrations/               # (Sẽ tự động sinh ra khi chạy lệnh Add-Migration)
 │
 ├── 2. BLL (Business Logic Layer - Class Library)
-│   ├── Services/
-│   │   ├── Interfaces/           # IAuthService, IProductService, ISalesService...
-│   │   └── Implementations/      # AuthService, ProductService, SalesService...
-│   ├── DTOs/                     # DTO truyền dữ liệu giữa BLL và GUI (LoginDTO, OrderDTO...)
-│   └── Exceptions/               # Custom Exceptions (OutOfStockException, NotFoundException)
+│   ├── Services/                 # Nơi xử lý nghiệp vụ (Bán hàng, Tính lương, Nhập kho...)
+│   │   ├── Interfaces/           
+│   │   └── Implementations/      
+│   ├── DTOs/                     # Data Transfer Objects: Đối tượng trung chuyển dữ liệu
+│   └── Exceptions/               # Custom Exceptions xử lý lỗi (VD: OutOfStockException)
 │
 ├── 3. GUI (Windows Forms App - Project chạy chính)
-│   ├── Forms/                    # Phân chia form theo vai trò / phân hệ nghiệp vụ
-│   │   ├── Auth/                 # LoginForm.cs, ChangePasswordForm.cs
-│   │   ├── Main/                 # MainForm.cs (Khung sườn chứa Menu và Panel điều hướng)
-│   │   ├── Sales/                # Form/UC Bán hàng (POS), Hóa đơn, Đổi trả
-│   │   ├── Warehouse/            # Form/UC Tồn kho, Nhập kho, Xuất kho, Kiểm kê
-│   │   ├── Employee/             # Form/UC Nhân viên, Chấm công, Bảng lương
-│   │   └── Reports/              # Form/UC Dashboard, Báo cáo thống kê
-│   ├── UserControls/             # Các thành phần tái sử dụng (Card sản phẩm, MenuBar...)
-│   ├── Program.cs                # Entry point: Cấu hình DI Container, gọi LoginForm
-│   └── appsettings.json          # Chuỗi kết nối Database và cấu hình ứng dụng
+│   ├── Forms/                    # Giao diện người dùng phân chia theo vai trò (dùng ReaLTaiizor)
+│   │   ├── Auth/                 # Đăng nhập, Đổi mật khẩu
+│   │   ├── Main/                 # Khung sườn chính (Menu điều hướng)
+│   │   ├── Sales/                # POS, Hóa đơn, Đổi trả
+│   │   ├── Warehouse/            # Tồn kho, Nhập/Xuất kho
+│   │   ├── Employee/             # Chấm công, Bảng lương
+│   │   └── Reports/              # Dashboard, Thống kê doanh thu
+│   ├── UserControls/             # Các UI Components tái sử dụng (Card sản phẩm, Menu...)
+│   ├── Program.cs                # Entry point, thiết lập Dependency Injection (DI Container)
+│   └── appsettings.json          # Cấu hình ứng dụng và chuỗi kết nối Database thực tế
 │
-└── 4. Common (Class Library)
-    ├── Constants/                # RoleConstants, MessageConstants
-    ├── Enums/                    # OrderStatus, AccountStatus, PaymentMethod
-    └── Utilities/                # PasswordHasher, ExcelHelper, PdfHelper
-
+└── 4. Common (Class Library)     # Thư viện chứa các thành phần dùng chung cho toàn hệ thống
+    ├── Constants/                # Hằng số (RoleConstants, MessageConstants...)
+    ├── Enums/                    # Tập hợp các trạng thái cố định
+    │   ├── AccountStatus.cs      # Trạng thái tài khoản: Active, Inactive, Blocked
+    │   ├── OrderStatus.cs        # Trạng thái đơn hàng: Pending, Completed, Cancelled...
+    │   └── PaymentMethod.cs      # Phương thức thanh toán: Cash, Transfer, Card
+    └── Utilities/                # Các hàm tiện ích (PasswordHasher, Excel/Pdf Helper...)
 
 
 Chào bạn, việc chuyển sang sử dụng thư viện **ReaLTaiizor** mang lại rất nhiều bộ giao diện có sẵn (như Material, Crown, Poison, Hope...) giúp ứng dụng WinForms trở nên cực kỳ hiện đại.
