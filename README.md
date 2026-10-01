@@ -78,9 +78,6 @@ PhuKienMayTinhSolution (Blank Solution)
     │   └── PaymentMethod.cs      # Phương thức thanh toán: Cash, Transfer, Card
     └── Utilities/                # Các hàm tiện ích (PasswordHasher, Excel/Pdf Helper...)
 
-
-Chào bạn, việc chuyển sang sử dụng thư viện **ReaLTaiizor** mang lại rất nhiều bộ giao diện có sẵn (như Material, Crown, Poison, Hope...) giúp ứng dụng WinForms trở nên cực kỳ hiện đại.
-
 Dưới đây là kế hoạch đã được cập nhật, áp dụng ReaLTaiizor và giữ nguyên quy tắc "mỗi người tự làm giao diện cho module của mình":
 
 ### 1. Quy trình thiết kế giao diện bằng ReaLTaiizor (Mỗi người tự làm)
