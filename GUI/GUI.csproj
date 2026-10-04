@@ -1,17 +1,310 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿CREATE DATABASE PhuKienMayTinhDB;
+GO
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+USE PhuKienMayTinhDB;
+GO
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.12" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
-    <PackageReference Include="ReaLTaiizor" Version="3.8.2.1" />
-  </ItemGroup>
+-- 1. Bảng Role & User (Tài khoản & Phân quyền)
+CREATE TABLE Roles (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+Name NVARCHAR(50) NOT NULL
+);
 
-</Project>
+INSERT INTO Roles (Name) VALUES (N'Admin'), (N'Quản lý'), (N'Nhân viên bán hàng'), (N'Nhân viên kho');
+
+CREATE TABLE Users (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+Username NVARCHAR(50) NOT NULL,
+PasswordHash NVARCHAR(MAX) NOT NULL,
+FullName NVARCHAR(100) NOT NULL,
+RoleId INT NOT NULL,
+Status INT NOT NULL DEFAULT 0,
+CONSTRAINT FK_Users_Roles FOREIGN KEY (RoleId) REFERENCES Roles(Id)
+);
+
+-- Thêm tài khoản Admin mặc định (PasswordHash tạm thời để trống hoặc chuỗi hash tùy bạn cấu hình)
+INSERT INTO Users (Username, PasswordHash, FullName, RoleId, Status)
+VALUES ('admin', 'hashed_password_here', N'Quản trị viên', 1, 0);
+
+-- 2. Bảng Attendance (Chấm công)
+CREATE TABLE Attendances (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+UserId INT NOT NULL,
+Date DATETIME2 NOT NULL,
+CheckIn TIME NULL,
+CheckOut TIME NULL,
+CONSTRAINT FK_Attendances_Users FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+
+-- 3. Bảng Category & Product (Sản phẩm)
+CREATE TABLE Categories (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+Name NVARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Products (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+Name NVARCHAR(200) NOT NULL,
+Barcode NVARCHAR(50) NULL,
+Price DECIMAL(18,2) NOT NULL,
+StockQuantity INT NOT NULL DEFAULT 0,
+ImageUrl NVARCHAR(MAX) NULL,
+CategoryId INT NOT NULL,
+CONSTRAINT FK_Products_Categories FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+);
+
+-- 4. Bảng Supplier & Inventory (Nhập kho)
+CREATE TABLE Suppliers (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+Name NVARCHAR(100) NOT NULL,
+Phone NVARCHAR(20) NULL,
+Address NVARCHAR(200) NULL
+);
+
+CREATE TABLE InventoryReceipts (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+SupplierId INT NOT NULL,
+UserId INT NOT NULL,
+ReceiptDate DATETIME2 NOT NULL,
+TotalAmount DECIMAL(18,2) NOT NULL,
+CONSTRAINT FK_InventoryReceipts_Suppliers FOREIGN KEY (SupplierId) REFERENCES Suppliers(Id),
+CONSTRAINT FK_InventoryReceipts_Users FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+
+CREATE TABLE InventoryReceiptDetails (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+ReceiptId INT NOT NULL,
+ProductId INT NOT NULL,
+Quantity INT NOT NULL,
+UnitPrice DECIMAL(18,2) NOT NULL,
+CONSTRAINT FK_InventoryReceiptDetails_Receipts FOREIGN KEY (ReceiptId) REFERENCES InventoryReceipts(Id),
+CONSTRAINT FK_InventoryReceiptDetails_Products FOREIGN KEY (ProductId) REFERENCES Products(Id)
+);
+
+-- 5. Bảng Customer & Order (Khách hàng & Bán hàng)
+CREATE TABLE Customers (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+Name NVARCHAR(100) NOT NULL,
+Phone NVARCHAR(20) NOT NULL,
+RewardPoints INT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE Orders (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+CustomerId INT NULL,
+UserId INT NOT NULL,
+OrderDate DATETIME2 NOT NULL,
+TotalAmount DECIMAL(18,2) NOT NULL,
+DiscountAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+Status INT NOT NULL DEFAULT 0,
+PaymentMethod INT NOT NULL DEFAULT 0,
+CONSTRAINT FK_Orders_Customers FOREIGN KEY (CustomerId) REFERENCES Customers(Id),
+CONSTRAINT FK_Orders_Users FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE NO ACTION
+);
+
+CREATE TABLE OrderDetails (
+Id INT IDENTITY(1,1) PRIMARY KEY,
+OrderId INT NOT NULL,
+ProductId INT NOT NULL,
+Quantity INT NOT NULL,
+UnitPrice DECIMAL(18,2) NOT NULL,
+CONSTRAINT FK_OrderDetails_Orders FOREIGN KEY (OrderId) REFERENCES Orders(Id),
+CONSTRAINT FK_OrderDetails_Products FOREIGN KEY (ProductId) REFERENCES Products(Id)
+);
+GO
+
+-- 1. Thêm Người dùng (Nhân sự)
+-- Lưu ý: Mật khẩu hash ở đây chỉ là dữ liệu giả lập (mock data)
+INSERT INTO Users (Username, PasswordHash, FullName, RoleId, Status) VALUES
+('quanly1', 'hashed_pw_123', N'Trần Văn Quản', 2, 0),
+('banhang1', 'hashed_pw_123', N'Nguyễn Thị Bán', 3, 0),
+('banhang2', 'hashed_pw_123', N'Lê Bán Hàng', 3, 0),
+('kho1', 'hashed_pw_123', N'Phạm Văn Kho', 4, 0);
+
+-- 2. Thêm Danh mục sản phẩm
+INSERT INTO Categories (Name) VALUES
+(N'Chuột máy tính'),
+(N'Bàn phím'),
+(N'Tai nghe'),
+(N'Màn hình'),
+(N'Lót chuột');
+
+-- 3. Thêm Sản phẩm (Phụ kiện)
+-- CategoryId tương ứng: 1(Chuột), 2(Bàn phím), 3(Tai nghe), 4(Màn hình), 5(Lót chuột)
+INSERT INTO Products (Name, Barcode, Price, StockQuantity, ImageUrl, CategoryId) VALUES
+(N'Chuột Logitech G102', '880123456789', 390000, 50, 'g102.jpg', 1),
+(N'Chuột Razer DeathAdder Essential', '880123456790', 550000, 30, 'razer_da.jpg', 1),
+(N'Bàn phím cơ Akko 3087', '880123456791', 1200000, 20, 'akko3087.jpg', 2),
+(N'Bàn phím DareU EK810', '880123456792', 600000, 45, 'dareu.jpg', 2),
+(N'Tai nghe HyperX Cloud II', '880123456793', 1800000, 15, 'hyperx.jpg', 3),
+(N'Tai nghe Sony WH-1000XM4', '880123456794', 6500000, 10, 'sony.jpg', 3),
+(N'Màn hình LG 24MP60G', '880123456795', 3200000, 25, 'lg24.jpg', 4),
+(N'Lót chuột Corsair MM300', '880123456796', 350000, 100, 'corsair.jpg', 5);
+
+-- 4. Thêm Nhà cung cấp
+INSERT INTO Suppliers (Name, Phone, Address) VALUES
+(N'Công ty TNHH Logitech Việt Nam', '0283123456', N'Quận 1, TP.HCM'),
+(N'Đại lý Phân phối Razer', '0909123456', N'Quận 3, TP.HCM');
+
+-- 5. Thêm Khách hàng
+INSERT INTO Customers (Name, Phone, RewardPoints) VALUES
+(N'Nguyễn Văn A', '0901000001', 150),
+(N'Trần Thị B', '0901000002', 50),
+(N'Lê Minh C', '0901000003', 0);
+
+-- 6. Thêm Phiếu nhập kho & Chi tiết nhập kho
+-- Giả sử UserId = 5 (kho1), SupplierId = 1
+INSERT INTO InventoryReceipts (SupplierId, UserId, ReceiptDate, TotalAmount) VALUES
+(1, 5, GETDATE(), 19500000);
+
+-- Nhập 50 con chuột Logitech (ProductId = 1)
+INSERT INTO InventoryReceiptDetails (ReceiptId, ProductId, Quantity, UnitPrice) VALUES
+(1, 1, 50, 390000);
+
+-- 7. Thêm Hóa đơn bán hàng & Chi tiết bán hàng (POS)
+-- Giả sử CustomerId = 1, UserId = 3 (banhang1)
+INSERT INTO Orders (CustomerId, UserId, OrderDate, TotalAmount, DiscountAmount, Status, PaymentMethod) VALUES
+(1, 3, GETDATE(), 1590000, 0, 1, 0);
+
+-- Bán 1 chuột Logitech (Id=1) và 1 bàn phím Akko (Id=3)
+INSERT INTO OrderDetails (OrderId, ProductId, Quantity, UnitPrice) VALUES
+(1, 1, 1, 390000),
+(1, 3, 1, 1200000);
+GO
+
+-- ==========================================
+-- 1. THÊM NHÂN SỰ MỚI (Mở rộng đội ngũ)
+-- ==========================================
+INSERT INTO Users (Username, PasswordHash, FullName, RoleId, Status) VALUES
+('banhang3', 'hashed_pw_123', N'Phạm Hoàng Long', 3, 0),
+('banhang4', 'hashed_pw_123', N'Đỗ Thị Mai', 3, 0),
+('kho2', 'hashed_pw_123', N'Vũ Ngọc Tuấn', 4, 0),
+('kho3', 'hashed_pw_123', N'Bùi Thanh Sơn', 4, 1); -- Nhân viên này đang tạm khóa (Inactive)
+
+-- ==========================================
+-- 2. THÊM DANH MỤC SẢN PHẨM (Đa dạng hóa)
+-- ==========================================
+INSERT INTO Categories (Name) VALUES
+(N'Linh kiện PC (RAM, Ổ cứng)'),
+(N'Vỏ Case & Tản nhiệt'),
+(N'Balo & Túi chống sốc'),
+(N'Webcam & Microphone'),
+(N'Ghế & Bàn Gaming');
+
+-- ==========================================
+-- 3. THÊM SẢN PHẨM MỚI (Kho hàng đồ sộ)
+-- CategoryId 1->5 (Chuột, Phím, Tai nghe, Màn, Lót chuột) - CategoryId 6->10 (Vừa thêm ở trên)
+-- ==========================================
+INSERT INTO Products (Name, Barcode, Price, StockQuantity, ImageUrl, CategoryId) VALUES
+-- Chuột & Phím
+(N'Chuột không dây Logitech MX Master 3S', '880123456801', 2500000, 15, 'mxmaster3s.jpg', 1),
+(N'Chuột Gaming Zowie EC2-C', '880123456802', 1700000, 20, 'zowie.jpg', 1),
+(N'Bàn phím cơ Leopold FC900R', '880123456803', 3400000, 12, 'leopold.jpg', 2),
+(N'Bàn phím không dây Keychron K2', '880123456804', 1800000, 30, 'keychron.jpg', 2),
+-- Tai nghe & Màn hình
+(N'Tai nghe True Wireless Sony WF-1000XM4', '880123456805', 4500000, 8, 'sony_wf.jpg', 3),
+(N'Tai nghe Gaming Razer BlackShark V2', '880123456806', 2200000, 18, 'blackshark.jpg', 3),
+(N'Màn hình Gaming ASUS TUF 27 inch 165Hz', '880123456807', 5500000, 10, 'asus27.jpg', 4),
+(N'Màn hình Dell UltraSharp U2422H', '880123456808', 6200000, 5, 'dell_u.jpg', 4),
+-- Linh kiện PC (Id danh mục = 6)
+(N'RAM Corsair Vengeance RGB Pro 16GB (2x8GB)', '880123456809', 1450000, 50, 'ram_corsair.jpg', 6),
+(N'Ổ cứng SSD Samsung 980 PRO 1TB PCIe 4.0', '880123456810', 2300000, 40, 'ssd_ss.jpg', 6),
+(N'Ổ cứng HDD WD Blue 2TB', '880123456811', 1350000, 25, 'hdd_wd.jpg', 6),
+-- Case & Tản nhiệt (Id danh mục = 7)
+(N'Vỏ Case NZXT H510 Flow Black', '880123456812', 1990000, 15, 'nzxt.jpg', 7),
+(N'Tản nhiệt nước AIO Corsair H150i', '880123456813', 4200000, 10, 'aio_corsair.jpg', 7),
+(N'Tản nhiệt khí Deepcool AK620', '880123456814', 1550000, 30, 'ak620.jpg', 7),
+-- Phụ kiện khác (Id 8, 9, 10)
+(N'Balo Laptop Targus 15.6 inch', '880123456815', 750000, 60, 'balo.jpg', 8),
+(N'Webcam Logitech C920 Pro', '880123456816', 1650000, 20, 'c920.jpg', 9),
+(N'Microphone HyperX QuadCast S', '880123456817', 3800000, 12, 'hyperx_mic.jpg', 9),
+(N'Ghế Gaming DXRacer Master Series', '880123456818', 8500000, 5, 'dxracer.jpg', 10),
+(N'Ghế Công thái học Herman Miller (Rep 1:1)', '880123456819', 4500000, 10, 'ergonomic.jpg', 10);
+
+-- ==========================================
+-- 4. THÊM NHÀ CUNG CẤP
+-- ==========================================
+INSERT INTO Suppliers (Name, Phone, Address) VALUES
+(N'Công ty TNHH Máy tính Phong Vũ', '18006868', N'Quận 3, TP.HCM'),
+(N'Nhà phân phối SPC (Vĩnh Xuân)', '0243123456', N'Đống Đa, Hà Nội'),
+(N'GearVN Cung ứng sỉ', '18006975', N'Tân Bình, TP.HCM');
+
+-- ==========================================
+-- 5. THÊM KHÁCH HÀNG (Tạo tệp khách hàng phong phú)
+-- ==========================================
+INSERT INTO Customers (Name, Phone, RewardPoints) VALUES
+(N'Đinh Công Thành', '0912345671', 1200),
+(N'Lý Hải Tùng', '0912345672', 450),
+(N'Hoàng Bích Ngọc', '0912345673', 800),
+(N'Ngô Quyền', '0912345674', 0),
+(N'Trương Vô Kỵ', '0912345675', 50),
+(N'Khách Lẻ (Vãng lai)', '0000000000', 0),
+(N'Vương Ngữ Yên', '0912345676', 320),
+(N'Trịnh Công Sơn', '0912345677', 1500);
+
+-- ==========================================
+-- 6. THÊM GIAO DỊCH NHẬP KHO (Lịch sử nhập hàng)
+-- ==========================================
+-- Nhập hàng ngày hôm qua
+INSERT INTO InventoryReceipts (SupplierId, UserId, ReceiptDate, TotalAmount) VALUES
+(3, 5, DATEADD(day, -1, GETDATE()), 35000000),
+(4, 8, DATEADD(day, -2, GETDATE()), 85000000);
+
+-- Thêm chi tiết cho các phiếu nhập trên (Giả sử ReceiptId mới sinh ra là 2 và 3)
+-- (Sử dụng các ProductId từ 10 đến 25)
+INSERT INTO InventoryReceiptDetails (ReceiptId, ProductId, Quantity, UnitPrice) VALUES
+(2, 10, 10, 1450000), -- 10 thanh RAM
+(2, 11, 5, 2300000),  -- 5 ổ cứng SSD
+(3, 18, 5, 4200000),  -- 5 Tản nhiệt AIO
+(3, 22, 5, 8500000);  -- 5 Ghế DXRacer
+
+-- ==========================================
+-- 7. THÊM HÓA ĐƠN BÁN HÀNG DÀY ĐẶC (Để vẽ biểu đồ Dashboard)
+-- Status: 0(Pending), 1(Completed), 2(Cancelled), 3(Returned)
+-- PaymentMethod: 0(Cash), 1(Transfer), 2(Card)
+-- ==========================================
+INSERT INTO Orders (CustomerId, UserId, OrderDate, TotalAmount, DiscountAmount, Status, PaymentMethod) VALUES
+-- Hàng bán hôm nay (Completed)
+(4, 3, GETDATE(), 3400000, 0, 1, 1),
+(5, 6, GETDATE(), 2500000, 100000, 1, 2),
+(8, 7, GETDATE(), 4500000, 0, 1, 0),
+-- Hàng bán hôm qua
+(6, 3, DATEADD(day, -1, GETDATE()), 750000, 0, 1, 0),
+(9, 6, DATEADD(day, -1, GETDATE()), 6200000, 200000, 1, 1),
+-- Hàng đang chờ giao (Pending)
+(10, 7, GETDATE(), 1990000, 0, 0, 1),
+-- Hàng bị hủy (Cancelled)
+(7, 3, DATEADD(day, -2, GETDATE()), 1450000, 0, 2, 0),
+-- Hàng khách trả lại (Returned)
+(11, 6, DATEADD(day, -3, GETDATE()), 1650000, 0, 3, 2),
+-- Khách mua VIP số lượng lớn
+(4, 3, DATEADD(day, -4, GETDATE()), 13000000, 500000, 1, 1),
+(5, 7, DATEADD(day, -5, GETDATE()), 5500000, 0, 1, 2);
+
+-- ==========================================
+-- 8. THÊM CHI TIẾT HÓA ĐƠN BÁN HÀNG
+-- (Nối vào các OrderId từ 2 đến 11 vừa sinh ra ở trên)
+-- ==========================================
+INSERT INTO OrderDetails (OrderId, ProductId, Quantity, UnitPrice) VALUES
+-- Đơn 2 (3.4tr)
+(2, 11, 1, 3400000),
+-- Đơn 3 (2.5tr)
+(3, 9, 1, 2500000),
+-- Đơn 4 (4.5tr)
+(4, 13, 1, 4500000),
+-- Đơn 5 (750k)
+(5, 20, 1, 750000),
+-- Đơn 6 (6.2tr)
+(6, 16, 1, 6200000),
+-- Đơn 7 (1.99tr)
+(7, 17, 1, 1990000),
+-- Đơn 8 (1.45tr - Đã hủy)
+(8, 14, 1, 1450000),
+-- Đơn 9 (1.65tr - Bị trả lại)
+(9, 21, 1, 1650000),
+-- Đơn 10 (13tr - Đơn to)
+(10, 22, 1, 8500000),
+(10, 23, 1, 4500000),
+-- Đơn 11 (5.5tr)
+(11, 15, 1, 5500000);
+GO
