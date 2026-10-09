@@ -1,0 +1,143 @@
+diff --git a/DAL/Context/AppDbContext.cs b/DAL/Context/AppDbContext.cs
+index 4e512b1..70f20e8 100644
+--- a/DAL/Context/AppDbContext.cs
++++ b/DAL/Context/AppDbContext.cs
+@@ -8,10 +8,6 @@ namespace DAL.Context
+     // Bắt buộc kế thừa DbContext từ EntityFrameworkCore
+     public class AppDbContext : DbContext
+     {
+-        public AppDbContext()
+-        {
+-        }
+-
+         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+         {
+         }
+@@ -29,16 +25,6 @@ namespace DAL.Context
+         public DbSet<Order> Orders { get; set; }
+         public DbSet<OrderDetail> OrderDetails { get; set; }
+ 
+-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+-        {
+-            // Thiết lập chuỗi kết nối tạm thời để có thể chạy Migration trực tiếp trong project 1. DAL
+-            if (!optionsBuilder.IsConfigured)
+-            {
+-                // Lưu ý: Thay "localhost" bằng tên Server SQL của bạn nếu cần
+-                optionsBuilder.UseSqlServer("Server=localhost;Database=PhuKienMayTinhDB;Trusted_Connection=True;TrustServerCertificate=True;");
+-            }
+-        }
+-
+         protected override void OnModelCreating(ModelBuilder modelBuilder)
+         {
+             base.OnModelCreating(modelBuilder);
+@@ -57,6 +43,13 @@ namespace DAL.Context
+                 .WithMany()
+                 .HasForeignKey(o => o.UserId)
+                 .OnDelete(DeleteBehavior.Restrict);
++
++            // Không cho xóa nhà cung cấp đã có phiếu nhập (khớp FK trong PhuKienMayTinhDB.sql)
++            modelBuilder.Entity<InventoryReceipt>()
++                .HasOne(r => r.Supplier)
++                .WithMany(s => s.InventoryReceipts)
++                .HasForeignKey(r => r.SupplierId)
++                .OnDelete(DeleteBehavior.Restrict);
+         }
+     }
+ }
+\ No newline at end of file
+diff --git a/DAL/Entities/Supplier.cs b/DAL/Entities/Supplier.cs
+index 8f3a5a0..0342fb0 100644
+--- a/DAL/Entities/Supplier.cs
++++ b/DAL/Entities/Supplier.cs
+@@ -15,5 +15,7 @@ namespace DAL.Entities
+ 
+         [MaxLength(200)]
+         public string? Address { get; set; }
++
++        public ICollection<InventoryReceipt>? InventoryReceipts { get; set; }
+     }
+ }
+\ No newline at end of file
+diff --git a/DAL/OrderRepository.cs b/DAL/Repositories/Implementations/OrderRepository.cs
+similarity index 100%
+rename from DAL/OrderRepository.cs
+rename to DAL/Repositories/Implementations/OrderRepository.cs
+diff --git a/DAL/Repositories/Implementations/Repository.cs b/DAL/Repositories/Implementations/Repository.cs
+index eb721bf..bd91330 100644
+--- a/DAL/Repositories/Implementations/Repository.cs
++++ b/DAL/Repositories/Implementations/Repository.cs
+@@ -30,7 +30,7 @@ namespace DAL.Repositories.Implementations
+             return await _dbSet.Where(predicate).ToListAsync();
+         }
+ 
+-        public async Task<T> GetByIdAsync(int id)
++        public async Task<T?> GetByIdAsync(int id)
+         {
+             return await _dbSet.FindAsync(id);
+         }
+diff --git a/DAL/Repositories/Implementations/UserRepository.cs b/DAL/Repositories/Implementations/UserRepository.cs
+index 1fac0db..2af4a10 100644
+--- a/DAL/Repositories/Implementations/UserRepository.cs
++++ b/DAL/Repositories/Implementations/UserRepository.cs
+@@ -12,7 +12,7 @@ namespace DAL.Repositories.Implementations
+         {
+         }
+ 
+-        public async Task<User> GetByUsernameAsync(string username)
++        public async Task<User?> GetByUsernameAsync(string username)
+         {
+             return await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
+         }
+diff --git a/DAL/Repositories/Interfaces/IOrderRepository.cs b/DAL/Repositories/Interfaces/IOrderRepository.cs
+index f636fb3..c433922 100644
+--- a/DAL/Repositories/Interfaces/IOrderRepository.cs
++++ b/DAL/Repositories/Interfaces/IOrderRepository.cs
+@@ -8,7 +8,7 @@ namespace DAL.Repositories.Interfaces
+     public interface IOrderRepository : IRepository<Order>
+     {
+         // Lấy toàn bộ đơn hàng kèm theo chi tiết đơn hàng (Eager Loading)
+-        Task<Order> GetOrderWithDetailsAsync(int orderId);
++        Task<Order?> GetOrderWithDetailsAsync(int orderId);
+ 
+         // Lấy doanh thu theo một khoảng thời gian (Phục vụ Dashboard Báo cáo)
+         Task<IEnumerable<Order>> GetOrdersByDateRangeAsync(DateTime startDate, DateTime endDate);
+diff --git a/DAL/Repositories/Interfaces/IRepository.cs b/DAL/Repositories/Interfaces/IRepository.cs
+index e2f6058..f3c73f5 100644
+--- a/DAL/Repositories/Interfaces/IRepository.cs
++++ b/DAL/Repositories/Interfaces/IRepository.cs
+@@ -14,7 +14,7 @@ namespace DAL.Repositories.Interfaces
+         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
+ 
+         // Lấy một đối tượng theo ID
+-        Task<T> GetByIdAsync(int id);
++        Task<T?> GetByIdAsync(int id);
+ 
+         // Thêm mới
+         Task AddAsync(T entity);
+diff --git a/DAL/Repositories/Interfaces/IUserRepository.cs b/DAL/Repositories/Interfaces/IUserRepository.cs
+index 5195575..fe8b218 100644
+--- a/DAL/Repositories/Interfaces/IUserRepository.cs
++++ b/DAL/Repositories/Interfaces/IUserRepository.cs
+@@ -6,7 +6,7 @@ namespace DAL.Repositories.Interfaces
+     public interface IUserRepository : IRepository<User>
+     {
+         // Thêm hàm đặc thù: Tìm user bằng Username để làm chức năng Đăng nhập
+-        Task<User> GetByUsernameAsync(string username);
++        Task<User?> GetByUsernameAsync(string username);
+ 
+         // Kiểm tra xem Username đã tồn tại chưa khi tạo mới
+         Task<bool> IsUsernameExistsAsync(string username);
+diff --git a/GUI/GUI.csproj b/GUI/GUI.csproj
+index db1c843..dffba95 100644
+--- a/GUI/GUI.csproj
++++ b/GUI/GUI.csproj
+@@ -13,6 +13,9 @@
+ 		<PackageReference Include="ReaLTaiizor" Version="3.8.0.5" />
+ 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+ 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
++		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
++			<PrivateAssets>all</PrivateAssets>
++		</PackageReference>
+ 	</ItemGroup>
+ 
+   <ItemGroup>

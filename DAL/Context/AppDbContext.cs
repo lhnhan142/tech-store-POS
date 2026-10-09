@@ -8,10 +8,6 @@ namespace DAL.Context
     // Bắt buộc kế thừa DbContext từ EntityFrameworkCore
     public class AppDbContext : DbContext
     {
-        public AppDbContext()
-        {
-        }
-
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
@@ -28,16 +24,6 @@ namespace DAL.Context
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            // Thiết lập chuỗi kết nối tạm thời để có thể chạy Migration trực tiếp trong project 1. DAL
-            if (!optionsBuilder.IsConfigured)
-            {
-                // Lưu ý: Thay "localhost" bằng tên Server SQL của bạn nếu cần
-                optionsBuilder.UseSqlServer("Server=localhost;Database=PhuKienMayTinhDB;Trusted_Connection=True;TrustServerCertificate=True;");
-            }
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -56,6 +42,13 @@ namespace DAL.Context
                 .HasOne(o => o.User)
                 .WithMany()
                 .HasForeignKey(o => o.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Không cho xóa nhà cung cấp đã có phiếu nhập (khớp FK trong PhuKienMayTinhDB.sql)
+            modelBuilder.Entity<InventoryReceipt>()
+                .HasOne(r => r.Supplier)
+                .WithMany(s => s.InventoryReceipts)
+                .HasForeignKey(r => r.SupplierId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

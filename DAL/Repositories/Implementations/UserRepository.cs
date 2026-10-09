@@ -12,7 +12,7 @@ namespace DAL.Repositories.Implementations
         {
         }
 
-        public async Task<User> GetByUsernameAsync(string username)
+        public async Task<User?> GetByUsernameAsync(string username)
         {
             return await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
         }

@@ -14,7 +14,7 @@ namespace DAL.Repositories.Interfaces
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
 
         // Lấy một đối tượng theo ID
-        Task<T> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(int id);
 
         // Thêm mới
         Task AddAsync(T entity);

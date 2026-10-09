@@ -15,5 +15,7 @@ namespace DAL.Entities
 
         [MaxLength(200)]
         public string? Address { get; set; }
+
+        public ICollection<InventoryReceipt>? InventoryReceipts { get; set; }
     }
 }
