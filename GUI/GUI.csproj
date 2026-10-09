@@ -19,6 +19,13 @@
 	</ItemGroup>
 
   <ItemGroup>
+    <!-- Chép appsettings.json sang thư mục chạy để Program.cs đọc được chuỗi kết nối -->
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Tham chiếu BLL và DAL -->
     <ProjectReference Include="..\BLL\BLL.csproj" />
     <ProjectReference Include="..\DAL\DAL.csproj" />
