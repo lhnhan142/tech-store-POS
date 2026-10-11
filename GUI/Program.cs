@@ -1,16 +1,13 @@
-﻿using System;
-using System.Windows.Forms;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using BLL.Services.Implementations;
+using BLL.Services.Interfaces;
+using DAL.Context;
+using DAL.Repositories.Implementations;
+using DAL.Repositories.Interfaces;
+using GUI.Forms.Warehouse;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-
-using DAL.Context;
-using DAL.Repositories.Interfaces;
-using DAL.Repositories.Implementations;
-using BLL.Services.Interfaces;
-using BLL.Services.Implementations;
-using GUI.Forms.Warehouse;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace GUI
 {
@@ -19,7 +16,7 @@ namespace GUI
         public static IServiceProvider? ServiceProvider { get; private set; }
 
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             ApplicationConfiguration.Initialize();
 
@@ -57,8 +54,13 @@ namespace GUI
             ServiceProvider = host.Services;
 
             // CHẠY THỬ riêng màn hình Nhà cung cấp. 
-            // Nhớ gắn // lại và mở LoginForm/MainForm trước khi commit code lên Github để ráp chung với nhóm.
-            Application.Run(ServiceProvider.GetRequiredService<SupplierForm>());
+            // Chạy bình thường: mở form chính (sau này thay bằng LoginForm/MainForm)
+            // Chạy thử riêng: dotnet run -- --supplier
+            var first = args.Contains("--supplier")
+                ? (Form)ServiceProvider.GetRequiredService<SupplierForm>()
+                : (Form)ServiceProvider.GetRequiredService<SupplierForm>(); // TODO: đổi thành LoginForm khi nhóm ráp xong
+
+            Application.Run(first);
         }
     }
 }

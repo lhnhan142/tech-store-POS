@@ -110,8 +110,9 @@ namespace BLL.Services.Implementations
             {
                 await _repo.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex)
             {
+                System.Diagnostics.Debug.WriteLine(ex.GetBaseException().Message);
                 throw new BusinessException(errorMessage);
             }
         }
