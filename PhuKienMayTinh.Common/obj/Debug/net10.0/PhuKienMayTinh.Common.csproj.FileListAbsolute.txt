@@ -1,0 +1,12 @@
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\bin\Debug\net10.0\PhuKienMayTinh.Common.deps.json
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\bin\Debug\net10.0\PhuKienMayTinh.Common.dll
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\bin\Debug\net10.0\PhuKienMayTinh.Common.pdb
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\obj\Debug\net10.0\PhuKienMayTinh.Common.csproj.AssemblyReference.cache
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\obj\Debug\net10.0\PhuKienMayTinh.Common.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\obj\Debug\net10.0\PhuKienMayTinh.Common.AssemblyInfoInputs.cache
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\obj\Debug\net10.0\PhuKienMayTinh.Common.AssemblyInfo.cs
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\obj\Debug\net10.0\PhuKienMayTinh.Common.csproj.CoreCompileInputs.cache
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\obj\Debug\net10.0\PhuKienMayTinh.Common.dll
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\obj\Debug\net10.0\refint\PhuKienMayTinh.Common.dll
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\obj\Debug\net10.0\PhuKienMayTinh.Common.pdb
+C:\Users\Truong\Downloads\BTLLTTQ\PhuKienMayTinh.Common\obj\Debug\net10.0\ref\PhuKienMayTinh.Common.dll

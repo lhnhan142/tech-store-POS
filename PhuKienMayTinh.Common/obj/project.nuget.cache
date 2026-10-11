@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "dgSpecHash": "yyS4A5UvyLI=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Truong\\Downloads\\BTLLTTQ\\PhuKienMayTinh.Common\\PhuKienMayTinh.Common.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Truong\\.nuget\\packages\\bouncycastle.cryptography\\2.7.0\\bouncycastle.cryptography.2.7.0.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\closedxml\\0.105.1\\closedxml.0.105.1.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\closedxml.parser\\2.0.0\\closedxml.parser.2.0.0.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\documentformat.openxml\\3.1.1\\documentformat.openxml.3.1.1.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\documentformat.openxml.framework\\3.1.1\\documentformat.openxml.framework.3.1.1.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\excelnumberformat\\1.1.0\\excelnumberformat.1.1.0.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\itextsharp.lgplv2.core\\3.8.6\\itextsharp.lgplv2.core.3.8.6.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\rbush.signed\\4.0.0\\rbush.signed.4.0.0.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\sixlabors.fonts\\1.0.0\\sixlabors.fonts.1.0.0.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\skiasharp\\4.152.0\\skiasharp.4.152.0.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\skiasharp.nativeassets.macos\\4.152.0\\skiasharp.nativeassets.macos.4.152.0.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\skiasharp.nativeassets.win32\\4.152.0\\skiasharp.nativeassets.win32.4.152.0.nupkg.sha512",
+    "C:\\Users\\Truong\\.nuget\\packages\\system.io.packaging\\8.0.1\\system.io.packaging.8.0.1.nupkg.sha512"
+  ],
+  "logs": []
+}
