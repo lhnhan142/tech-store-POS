@@ -1,24 +1,22 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using BLL.Services.Implementations;
+using BLL.Services.Interfaces;
+using DAL.Context;
+using DAL.Repositories.Implementations;
+using DAL.Repositories.Interfaces;
+using GUI.Forms.Warehouse;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Windows.Forms;
-using DAL.Context;
-using DAL.Repositories.Interfaces;
-using DAL.Repositories.Implementations;
-using BLL.Services.Implementations;
-using BLL.Services.Interfaces;
-using GUI.Forms.Warehouse;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace GUI
 {
     internal static class Program
     {
-        public static IServiceProvider ServiceProvider { get; private set; }
+        public static IServiceProvider? ServiceProvider { get; private set; }
 
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             ApplicationConfiguration.Initialize();
 
@@ -36,16 +34,17 @@ namespace GUI
                         options.UseSqlServer(connectionString));
 
                     // 2. Đăng ký Repositories (DAL)
-                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>)); // Bắt buộc phải có cho Generic
                     services.AddScoped<IUserRepository, UserRepository>();
                     services.AddScoped<IProductRepository, ProductRepository>();
                     services.AddScoped<IOrderRepository, OrderRepository>();
                     services.AddScoped<ISupplierRepository, SupplierRepository>();
 
-                    // 2b. Đăng ký Services (BLL)
+                    // 3. Đăng ký Services (BLL)
+                    services.AddScoped(typeof(IService<>), typeof(BaseService<>)); // BỔ SUNG DÒNG NÀY (Generic Service)
                     services.AddScoped<ISupplierService, SupplierService>();
 
-                    // 3. Đăng ký các Form giao diện chính
+                    // 4. Đăng ký các Form giao diện chính
                     services.AddTransient<SupplierForm>();
                     // VD: services.AddTransient<MainForm>();
                     // VD: services.AddTransient<LoginForm>();
@@ -54,12 +53,14 @@ namespace GUI
 
             ServiceProvider = host.Services;
 
-            // Chạy Form khởi động đầu tiên (Thay MainForm bằng form đăng nhập của bạn sau này)
-            // Application.Run(ServiceProvider.GetRequiredService<MainForm>());
+            // CHẠY THỬ riêng màn hình Nhà cung cấp. 
+            // Chạy bình thường: mở form chính (sau này thay bằng LoginForm/MainForm)
+            // Chạy thử riêng: dotnet run -- --supplier
+            var first = args.Contains("--supplier")
+                ? (Form)ServiceProvider.GetRequiredService<SupplierForm>()
+                : (Form)ServiceProvider.GetRequiredService<SupplierForm>(); // TODO: đổi thành LoginForm khi nhóm ráp xong
 
-            // CHẠY THỬ riêng màn hình Nhà cung cấp: bỏ dấu // ở dòng dưới. Nhớ gắn // lại trước khi commit,
-            // vì khi có MainForm/LoginForm thì SupplierForm sẽ được mở từ menu.
-            Application.Run(ServiceProvider.GetRequiredService<SupplierForm>());
+            Application.Run(first);
         }
     }
 }
