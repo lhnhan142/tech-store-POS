@@ -14,5 +14,10 @@ namespace GUI.Forms.Sales
             StartPosition = FormStartPosition.CenterScreen;
             Controls.Add(new POSControl { Dock = DockStyle.Fill });
         }
+
+        private void InitializeComponent()
+        {
+
+        }
     }
 }

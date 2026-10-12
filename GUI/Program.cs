@@ -60,7 +60,9 @@ namespace GUI
                 ? (Form)ServiceProvider.GetRequiredService<SupplierForm>()
                 : (Form)ServiceProvider.GetRequiredService<SupplierForm>(); // TODO: đổi thành LoginForm khi nhóm ráp xong
 
-            Application.Run(first);
+                 Application.Run(first);
+            // TEST: bỏ comment dòng dưới để chạy riêng màn hình POS
+            // Application.Run(new GUI.Forms.Sales.POSTestForm());
         }
     }
 }
