@@ -1,4 +1,4 @@
-﻿using DAL.Context;
+using DAL.Context;
 using DAL.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -48,6 +48,34 @@ namespace DAL.Repositories.Implementations
         public void Delete(T entity)
         {
             _dbSet.Remove(entity);
+        }
+
+        public async Task<(IReadOnlyList<T> Items, int TotalCount)> GetPagedAsync(
+            Expression<Func<T, bool>>? predicate,
+            int pageIndex,
+            int pageSize,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+        {
+            IQueryable<T> query = _dbSet;
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+
+            int totalCount = await query.CountAsync();
+
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+
+            int safePageIndex = Math.Max(0, pageIndex);
+            var items = await query
+                .Skip(safePageIndex * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
 
         public async Task<int> SaveChangesAsync()

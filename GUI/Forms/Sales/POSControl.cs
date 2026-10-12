@@ -1,14 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using BLL.DTOs;
+using BLL.DTOs.Invoice;
+using BLL.Services.Interfaces;
 using GUI.UserControls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GUI.Forms.Sales
 {
@@ -21,7 +25,8 @@ namespace GUI.Forms.Sales
         private static readonly Color Primary = Color.FromArgb(0, 112, 243);
         private static readonly Color TextDark = Color.FromArgb(15, 15, 60);
 
-        private record ProductItem(int Id, string Name, decimal Price, int Stock, int CategoryId, string Barcode);
+        // ĐỔI 1: thêm ImageFile (tên file ảnh trong Images\Products)
+        private record ProductItem(int Id, string Name, decimal Price, int Stock, int CategoryId, string Barcode, string? ImageFile);
 
         private readonly List<ProductItem> _allProducts = new();
         private readonly List<CartItemDTO> _cart = new();
@@ -49,6 +54,13 @@ namespace GUI.Forms.Sales
         }
 
         private static string Money(decimal v) => v.ToString("N0", Vi) + "đ";
+
+        // ĐỔI 2: ghép tên file thành đường dẫn đầy đủ, null nếu không có
+        private static string? ImagePathOf(string? fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) return null;
+            return Path.Combine(Application.StartupPath, "Images", "Products", fileName);
+        }
 
         // Bỏ dấu tiếng Việt để tìm "chuot" ra "Chuột"
         private static string Normalize(string s)
@@ -85,21 +97,22 @@ namespace GUI.Forms.Sales
         // Dữ liệu giả theo SQL. Sau này thay bằng IProductService.
         private void LoadFakeProducts()
         {
+            // ĐỔI 3: thêm tên file ảnh ở cuối mỗi dòng
             _allProducts.AddRange(new[]
             {
-                new ProductItem(1,  "Chuột Logitech G102", 390000, 50, 1, "880123456789"),
-                new ProductItem(2,  "Chuột Razer DeathAdder Essential", 550000, 30, 1, "880123456790"),
-                new ProductItem(3,  "Bàn phím cơ Akko 3087", 1200000, 20, 2, "880123456791"),
-                new ProductItem(4,  "Bàn phím DareU EK810", 600000, 45, 2, "880123456792"),
-                new ProductItem(5,  "Tai nghe HyperX Cloud II", 1800000, 15, 3, "880123456793"),
-                new ProductItem(6,  "Tai nghe Sony WH-1000XM4", 6500000, 10, 3, "880123456794"),
-                new ProductItem(7,  "Màn hình LG 24MP60G", 3200000, 25, 4, "880123456795"),
-                new ProductItem(8,  "Lót chuột Corsair MM300", 350000, 100, 5, "880123456796"),
-                new ProductItem(9,  "Chuột không dây Logitech MX Master 3S", 2500000, 15, 1, "880123456801"),
-                new ProductItem(10, "RAM Corsair Vengeance RGB Pro 16GB (2x8GB)", 1450000, 50, 6, "880123456809"),
-                new ProductItem(11, "Ổ cứng SSD Samsung 980 PRO 1TB PCIe 4.0", 2300000, 40, 6, "880123456810"),
-                new ProductItem(12, "Balo Laptop Targus 15.6 inch", 750000, 60, 8, "880123456815"),
-                new ProductItem(13, "Ghế Gaming DXRacer Master Series", 8500000, 5, 10, "880123456818"),
+                new ProductItem(1,  "Chuột Logitech G102", 390000, 50, 1, "880123456789", "g102.jpg"),
+                new ProductItem(2,  "Chuột Razer DeathAdder Essential", 550000, 30, 1, "880123456790", "deathadder.jpg"),
+                new ProductItem(3,  "Bàn phím cơ Akko 3087", 1200000, 20, 2, "880123456791", "akko3087.jpg"),
+                new ProductItem(4,  "Bàn phím DareU EK810", 600000, 45, 2, "880123456792", "dareu-ek810.jpg"),
+                new ProductItem(5,  "Tai nghe HyperX Cloud II", 1800000, 15, 3, "880123456793", "hyperx-cloud2.jpg"),
+                new ProductItem(6,  "Tai nghe Sony WH-1000XM4", 6500000, 10, 3, "880123456794", "sony-xm4.jpg"),
+                new ProductItem(7,  "Màn hình LG 24MP60G", 3200000, 25, 4, "880123456795", "lg-24mp60g.jpg"),
+                new ProductItem(8,  "Lót chuột Corsair MM300", 350000, 100, 5, "880123456796", "corsair-mm300.jpg"),
+                new ProductItem(9,  "Chuột không dây Logitech MX Master 3S", 2500000, 15, 1, "880123456801", "mx-master3s.jpg"),
+                new ProductItem(10, "RAM Corsair Vengeance RGB Pro 16GB (2x8GB)", 1450000, 50, 6, "880123456809", "corsair-vengeance.jpg"),
+                new ProductItem(11, "Ổ cứng SSD Samsung 980 PRO 1TB PCIe 4.0", 2300000, 40, 6, "880123456810", "samsung-980pro.jpg"),
+                new ProductItem(12, "Balo Laptop Targus 15.6 inch", 750000, 60, 8, "880123456815", "targus-156.jpg"),
+                new ProductItem(13, "Ghế Gaming DXRacer Master Series", 8500000, 5, 10, "880123456818", "dxracer.jpg"),
             });
         }
 
@@ -162,7 +175,7 @@ namespace GUI.Forms.Sales
             var hit = _allProducts.FirstOrDefault(p => p.Barcode == text);
             if (hit != null)
             {
-                AddToCart(hit.Id, hit.Name, hit.Price, hit.Stock);
+                AddToCart(hit.Id, hit.Name, hit.Price, hit.Stock, ImagePathOf(hit.ImageFile));
                 txtSearch.Clear();
             }
             else
@@ -214,8 +227,9 @@ namespace GUI.Forms.Sales
             foreach (var p in products)
             {
                 var card = new ucProductCard();
-                card.SetData(p.Id, p.Name, p.Price, p.Stock, null);
-                card.ProductClicked += (s, id) => AddToCart(p.Id, p.Name, p.Price, p.Stock);
+                string? img = ImagePathOf(p.ImageFile);   // ĐỔI 4: truyền đường dẫn ảnh thay vì null
+                card.SetData(p.Id, p.Name, p.Price, p.Stock, img);
+                card.ProductClicked += (s, id) => AddToCart(p.Id, p.Name, p.Price, p.Stock, img);
                 pnlGrid.Controls.Add(card);
             }
 
@@ -259,7 +273,7 @@ namespace GUI.Forms.Sales
         }
 
         // ---------- Giỏ hàng ----------
-        private void AddToCart(int id, string name, decimal price, int stock)
+        private void AddToCart(int id, string name, decimal price, int stock, string? imagePath = null)
         {
             var item = _cart.FirstOrDefault(x => x.ProductId == id);
             int newQty = (item?.Quantity ?? 0) + 1;
@@ -272,7 +286,7 @@ namespace GUI.Forms.Sales
             }
 
             if (item == null)
-                _cart.Add(new CartItemDTO { ProductId = id, Name = name, UnitPrice = price, Quantity = 1, Stock = stock });
+                _cart.Add(new CartItemDTO { ProductId = id, Name = name, UnitPrice = price, Quantity = 1, Stock = stock, ImagePath = imagePath });
             else
                 item.Quantity = newQty;
 
@@ -302,7 +316,11 @@ namespace GUI.Forms.Sales
             _cart.RemoveAll(x => x.ProductId == productId);
             RefreshCart();
         }
-
+        private decimal CalcTotal()
+        {
+            decimal subtotal = _cart.Sum(x => x.LineTotal);
+            return Math.Max(0, subtotal - _discount + _tax);
+        }
         // Vẽ lại danh sách giỏ hàng và tính lại tổng tiền
         private void RefreshCart()
         {
@@ -343,7 +361,7 @@ namespace GUI.Forms.Sales
                 c.Width = w;
         }
 
-        private void BtnPay_Click(object? sender, EventArgs e)
+        private async void BtnPay_Click(object? sender, EventArgs e)
         {
             if (_cart.Count == 0)
             {
@@ -352,9 +370,53 @@ namespace GUI.Forms.Sales
                 return;
             }
 
-            // TODO: gọi ISalesService.CreateOrder(...) khi BLL xong
-            MessageBox.Show($"Thanh toán thành công: {lblTotal.Text}", "Thanh toán",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            decimal total = CalcTotal();
+
+            using var frm = new PaymentForm(total);
+            if (frm.ShowDialog(this) != DialogResult.OK) return;
+
+            string invoiceNo = "";
+            try
+            {
+                if (Program.ServiceProvider != null)
+                {
+                    using var scope = Program.ServiceProvider.CreateScope();
+                    var invoiceService = scope.ServiceProvider.GetRequiredService<IInvoiceService>();
+
+                    decimal subtotal = _cart.Sum(x => x.LineTotal);
+                    var dto = new CreateSaleInvoiceDto(
+                        CustomerId: 1, // Khách hàng mặc định trong CSDL (Nguyễn Văn A)
+                        SubTotal: subtotal,
+                        DiscountAmount: _discount,
+                        TotalAmount: total,
+                        PaymentMethod: frm.SelectedMethod,
+                        Items: _cart.Select(c => new CreateSaleInvoiceItemDto(
+                            ProductId: c.ProductId,
+                            ProductName: c.Name,
+                            Qty: c.Quantity,
+                            UnitPrice: c.UnitPrice,
+                            DiscountAlloc: 0,
+                            LineTotal: c.LineTotal
+                        )).ToList()
+                    );
+
+                    invoiceNo = await invoiceService.CreateSaleInvoiceAsync(dto);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi lưu hóa đơn: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            MessageBox.Show(
+                $"Thanh toán thành công!\n" +
+                $"Mã hóa đơn: {invoiceNo}\n" +
+                $"Tổng tiền: {Money(total)}\n" +
+                $"Tiền thừa: {Money(frm.Change)}\n\n" +
+                "Hóa đơn đã được lưu vào hệ thống để thử nghiệm đổi trả.",
+                "Thanh toán hoàn tất", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             _cart.Clear();
             RefreshCart();

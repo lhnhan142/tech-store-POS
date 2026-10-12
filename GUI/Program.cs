@@ -1,9 +1,10 @@
-﻿using BLL.Services.Implementations;
+using BLL.Services.Implementations;
 using BLL.Services.Interfaces;
 using DAL.Context;
 using DAL.Repositories.Implementations;
 using DAL.Repositories.Interfaces;
 using GUI.Forms.Warehouse;
+using GUI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,13 +40,27 @@ namespace GUI
                     services.AddScoped<IProductRepository, ProductRepository>();
                     services.AddScoped<IOrderRepository, OrderRepository>();
                     services.AddScoped<ISupplierRepository, SupplierRepository>();
+                    services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+                    services.AddScoped<IReturnRepository, ReturnRepository>();
+                    services.AddScoped<IReturnPolicyRepository, ReturnPolicyRepository>();
+                    services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+                    services.AddScoped<IUnitOfWork, UnitOfWork>();
 
                     // 3. Đăng ký Services (BLL)
                     services.AddScoped(typeof(IService<>), typeof(BaseService<>)); // BỔ SUNG DÒNG NÀY (Generic Service)
                     services.AddScoped<ISupplierService, SupplierService>();
+                    services.AddScoped<IInvoiceService, InvoiceService>();
+                    services.AddScoped<IReturnService, ReturnService>();
+                    services.AddScoped<IReturnReportService, ReturnReportService>();
+                    services.AddSingleton<UserSession>();
+                    services.AddSingleton<ICurrentUserService>(sp => sp.GetRequiredService<UserSession>());
 
                     // 4. Đăng ký các Form giao diện chính
                     services.AddTransient<SupplierForm>();
+                    services.AddTransient<GUI.Forms.InvoiceAndReturn.frmDanhSachHoaDon>();
+                    services.AddTransient<GUI.Forms.InvoiceAndReturn.frmYeuCauDoiTra>();
+                    services.AddTransient<GUI.Forms.InvoiceAndReturn.frmNhanHang>();
+                    services.AddTransient<GUI.Forms.InvoiceAndReturn.frmBaoCaoDoiTra>();
                     // VD: services.AddTransient<MainForm>();
                     // VD: services.AddTransient<LoginForm>();
                 })
@@ -53,12 +68,23 @@ namespace GUI
 
             ServiceProvider = host.Services;
 
-            // CHẠY THỬ riêng màn hình Nhà cung cấp. 
-            // Chạy bình thường: mở form chính (sau này thay bằng LoginForm/MainForm)
-            // Chạy thử riêng: dotnet run -- --supplier
-            var first = args.Contains("--supplier")
-                ? (Form)ServiceProvider.GetRequiredService<SupplierForm>()
-                : (Form)ServiceProvider.GetRequiredService<SupplierForm>(); // TODO: đổi thành LoginForm khi nhóm ráp xong
+            // Form khởi động:
+            // - Mặc định: Mở Quản lý đơn hàng & đổi trả
+            // - Tham số --supplier: Mở quản lý nhà cung cấp (dotnet run -- --supplier)
+            // - Tham số --pos: Mở màn hình POS thử nghiệm
+            Form first;
+            if (args.Contains("--supplier"))
+            {
+                first = ServiceProvider.GetRequiredService<SupplierForm>();
+            }
+            else if (args.Contains("--pos"))
+            {
+                first = new GUI.Forms.Sales.POSTestForm();
+            }
+            else
+            {
+                first = ServiceProvider.GetRequiredService<GUI.Forms.InvoiceAndReturn.frmDanhSachHoaDon>();
+            }
 
             Application.Run(first);
         }

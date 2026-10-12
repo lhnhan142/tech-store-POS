@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -33,5 +33,13 @@
     <!-- Lưu ý: Nếu thư mục tên là DTO thì để ..\DTO\Common.csproj, nếu là Common thì để ..\Common\Common.csproj -->
     <ProjectReference Include="..\DTO\Common.csproj" />
   </ItemGroup>
+	<ItemGroup>
+		<None Update="Images\Products\**\*.jpg">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Images\Products\**\*.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
 </Project>

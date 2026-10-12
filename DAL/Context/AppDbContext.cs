@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using DAL.Entities; // Chứa các Models (User, Product, Order...)
@@ -25,9 +25,24 @@ namespace DAL.Context
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
 
+        // DbSets cho Module Quản lý Hóa đơn & Đổi trả
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<InvoiceItem> InvoiceItems { get; set; }
+        public DbSet<InvoicePayment> InvoicePayments { get; set; }
+        public DbSet<ReturnRequest> ReturnRequests { get; set; }
+        public DbSet<ReturnItem> ReturnItems { get; set; }
+        public DbSet<ReturnAttachment> ReturnAttachments { get; set; }
+        public DbSet<Refund> Refunds { get; set; }
+        public DbSet<ReturnPolicy> ReturnPolicies { get; set; }
+        public DbSet<StockMovement> StockMovements { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Nạp toàn bộ EntityTypeConfiguration của module
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
             // Seed data cơ bản cho Roles
             modelBuilder.Entity<Role>().HasData(

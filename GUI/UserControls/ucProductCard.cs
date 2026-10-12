@@ -18,9 +18,12 @@ namespace GUI.UserControls
         public ucProductCard()
         {
             InitializeComponent();
+
+            // Ảnh vừa khung, không bị méo
+            picImage.SizeMode = PictureBoxSizeMode.Zoom;
+
             // Ô ảnh co giãn theo chiều rộng thẻ
             Resize += (s, e) => picImage.Height = (int)((Width - Padding.Horizontal) * 0.8);
-
 
             // Click vào bất kỳ chỗ nào trên thẻ đều tính là chọn sản phẩm
             foreach (Control c in new Control[] { this, picImage, lblName, pnlBottom, lblPrice, lblStock })
@@ -37,26 +40,28 @@ namespace GUI.UserControls
             lblPrice.Text = price.ToString("N0", new CultureInfo("vi-VN")) + "đ";
             lblStock.Text = $"Kho: {stock}";
 
+            // Xóa ảnh cũ trước khi nạp ảnh mới
+            picImage.Image?.Dispose();
+            picImage.Image = null;
+
             if (!string.IsNullOrEmpty(imagePath) && File.Exists(imagePath))
             {
-                using var fs = new FileStream(imagePath, FileMode.Open, FileAccess.Read);
-                picImage.Image = Image.FromStream(fs); // không khóa file ảnh
+                using var img = Image.FromFile(imagePath);
+                picImage.Image = new Bitmap(img); // copy ra, không khóa file ảnh
             }
         }
 
-        // Hàm này do Designer tạo khi bạn nhấp đúp vào ô ảnh. Giữ lại để khỏi lỗi build.
+        // Các hàm dưới do Designer tạo khi nhấp đúp. Giữ lại để khỏi lỗi build.
         private void picImage_Click(object sender, EventArgs e)
         {
         }
 
         private void lblName_Click(object sender, EventArgs e)
         {
-
         }
 
         private void lblName_Click_1(object sender, EventArgs e)
         {
-
         }
     }
 }
