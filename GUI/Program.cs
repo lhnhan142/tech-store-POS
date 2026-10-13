@@ -13,56 +13,44 @@ namespace GUI
 {
     internal static class Program
     {
-        public static IServiceProvider? ServiceProvider { get; private set; }
+        public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
         [STAThread]
         static void Main(string[] args)
         {
             ApplicationConfiguration.Initialize();
 
-            // Khởi tạo Host cho Dependency Injection
             var host = Host.CreateDefaultBuilder()
-                .ConfigureAppConfiguration((context, builder) =>
-                {
-                    builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-                })
+                .ConfigureAppConfiguration((_, builder) =>
+                    builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
                 .ConfigureServices((context, services) =>
                 {
-                    // 1. Đăng ký Database Context
-                    var connectionString = context.Configuration.GetConnectionString("DefaultConnection");
-                    services.AddDbContext<AppDbContext>(options =>
-                        options.UseSqlServer(connectionString));
+                    // 1. Database
+                    var cs = context.Configuration.GetConnectionString("DefaultConnection");
+                    services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 
-                    // 2. Đăng ký Repositories (DAL)
-                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>)); // Bắt buộc phải có cho Generic
+                    // 2. Repositories (DAL)
+                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
                     services.AddScoped<IUserRepository, UserRepository>();
                     services.AddScoped<IProductRepository, ProductRepository>();
                     services.AddScoped<IOrderRepository, OrderRepository>();
                     services.AddScoped<ISupplierRepository, SupplierRepository>();
 
-                    // 3. Đăng ký Services (BLL)
-                    services.AddScoped(typeof(IService<>), typeof(BaseService<>)); // BỔ SUNG DÒNG NÀY (Generic Service)
+                    // 3. Services (BLL)
+                    services.AddScoped(typeof(IService<>), typeof(BaseService<>));
                     services.AddScoped<ISupplierService, SupplierService>();
 
-                    // 4. Đăng ký các Form giao diện chính
+                    // 4. Forms (Transient, mỗi lần mở là một instance mới)
                     services.AddTransient<SupplierForm>();
-                    // VD: services.AddTransient<MainForm>();
-                    // VD: services.AddTransient<LoginForm>();
+                    // services.AddTransient<GUI.Auth.LoginForm>()
+                    services.AddTransient<GUI.Forms.Main.MainForm>();
                 })
                 .Build();
 
             ServiceProvider = host.Services;
 
-            // CHẠY THỬ riêng màn hình Nhà cung cấp. 
-            // Chạy bình thường: mở form chính (sau này thay bằng LoginForm/MainForm)
-            // Chạy thử riêng: dotnet run -- --supplier
-            var first = args.Contains("--supplier")
-                ? (Form)ServiceProvider.GetRequiredService<SupplierForm>()
-                : (Form)ServiceProvider.GetRequiredService<SupplierForm>(); // TODO: đổi thành LoginForm khi nhóm ráp xong
-
-                 Application.Run(first);
-            // TEST: bỏ comment dòng dưới để chạy riêng màn hình POS
-            // Application.Run(new GUI.Forms.Sales.POSTestForm());
+            // Mở form khởi động (sau này đổi thành LoginForm)
+            Application.Run(ServiceProvider.GetRequiredService<GUI.Forms.Main.MainForm>());
         }
     }
-}
+}   
