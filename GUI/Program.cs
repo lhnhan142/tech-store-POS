@@ -21,6 +21,7 @@ namespace GUI
             ApplicationConfiguration.Initialize();
 
             var host = Host.CreateDefaultBuilder()
+                .UseContentRoot(AppContext.BaseDirectory)
                 .ConfigureAppConfiguration((_, builder) =>
                     builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
                 .ConfigureServices((context, services) =>
