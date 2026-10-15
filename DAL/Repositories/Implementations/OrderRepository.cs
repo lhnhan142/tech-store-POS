@@ -26,9 +26,12 @@ namespace DAL.Repositories.Implementations
 
         public async Task<IEnumerable<Order>> GetOrdersByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
-            // Lọc hóa đơn theo khoảng thời gian để làm báo cáo
+            // Lọc hóa đơn theo khoảng thời gian để làm báo cáo.
+            // endDate tính trọn ngày: nếu truyền 00:00 thì vẫn lấy hết đơn của ngày đó.
+            var from = startDate.Date;
+            var toExclusive = endDate.Date.AddDays(1);
             return await _dbSet
-                .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
+                .Where(o => o.OrderDate >= from && o.OrderDate < toExclusive)
                 .ToListAsync();
         }
     }

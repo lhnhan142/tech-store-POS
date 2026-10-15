@@ -48,6 +48,13 @@ namespace GUI.Forms.Sales
 
             ApplyFilter();
             RefreshCart();
+
+            // Timer WinForms không nằm trong components nên phải tự dispose
+            Disposed += (s, e) =>
+            {
+                _searchTimer.Stop();
+                _searchTimer.Dispose();
+            };
         }
 
         private static string Money(decimal v) => v.ToString("N0", Vi) + "đ";
@@ -155,7 +162,12 @@ namespace GUI.Forms.Sales
         // ---------- Tìm kiếm ----------
         private void SetupSearch()
         {
-            _searchTimer.Tick += (s, e) => { _searchTimer.Stop(); ApplyFilter(); };
+            _searchTimer.Tick += (s, e) =>
+            {
+                _searchTimer.Stop();
+                if (IsDisposed) return;
+                ApplyFilter();
+            };
             txtSearch.TextChanged += (s, e) => { _searchTimer.Stop(); _searchTimer.Start(); };
             txtSearch.KeyDown += TxtSearch_KeyDown;
         }
