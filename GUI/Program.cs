@@ -1,4 +1,5 @@
-﻿using BLL.Services.Implementations;
+﻿using BLL.Services;
+using BLL.Services.Implementations;
 using BLL.Services.Interfaces;
 using DAL.Context;
 using DAL.Repositories.Implementations;
@@ -36,13 +37,24 @@ namespace GUI
                     services.AddScoped<IProductRepository, ProductRepository>();
                     services.AddScoped<IOrderRepository, OrderRepository>();
                     services.AddScoped<ISupplierRepository, SupplierRepository>();
+                    services.AddScoped<IInventoryRepository, InventoryRepository>();
 
                     // 3. Services (BLL)
                     services.AddScoped(typeof(IService<>), typeof(BaseService<>));
                     services.AddScoped<ISupplierService, SupplierService>();
+                    services.AddScoped<IInventoryService, InventoryService>();
+                    services.AddScoped<IStockAlertService, StockAlertService>();
+                    services.AddSingleton(new InventorySettings
+                    {
+                        LowStockThreshold = context.Configuration.GetValue("Inventory:LowStockThreshold", 10)
+                    });
 
                     // 4. Forms (Transient, mỗi lần mở là một instance mới)
                     services.AddTransient<SupplierForm>();
+                    services.AddTransient<ReceiptForm>();
+                    services.AddTransient<IssueForm>();
+                    services.AddTransient<StockTakeForm>();
+                    services.AddTransient<StockAlertForm>();
                     // services.AddTransient<GUI.Auth.LoginForm>()
                     services.AddTransient<GUI.Forms.Main.MainForm>();
                 })
