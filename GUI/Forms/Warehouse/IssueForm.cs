@@ -43,10 +43,10 @@ namespace GUI.Forms.Warehouse
         // ------------------------------------------------------------ Bảng bên trái
         protected override void ConfigureHistoryColumns(DataGridView grid)
         {
-            grid.Columns.Add(TextColumn("Mã", nameof(IssueSummaryDTO.Id), width: 56));
-            grid.Columns.Add(TextColumn("Ngày xuất", nameof(IssueSummaryDTO.IssueDate), width: 130, format: "dd/MM/yyyy HH:mm"));
-            grid.Columns.Add(TextColumn("Lý do", nameof(IssueSummaryDTO.Reason), fillWeight: 40));
-            grid.Columns.Add(TextColumn("Người lập", nameof(IssueSummaryDTO.UserName), fillWeight: 25));
+            grid.Columns.Add(TextColumn("Mã", nameof(IssueSummaryDTO.Id), width: 44));
+            grid.Columns.Add(TextColumn("Ngày xuất", nameof(IssueSummaryDTO.IssueDate), width: 125, format: "dd/MM/yyyy HH:mm"));
+            grid.Columns.Add(TextColumn("Lý do", nameof(IssueSummaryDTO.Reason), fillWeight: 40, minWidth: 85));
+            grid.Columns.Add(TextColumn("Người lập", nameof(IssueSummaryDTO.UserName), fillWeight: 25, minWidth: 78));
             grid.Columns.Add(TextColumn("Tổng SL", nameof(IssueSummaryDTO.TotalQuantity), width: 80, format: "N0", right: true));
         }
 

@@ -124,8 +124,8 @@ namespace GUI.Forms.Warehouse
                 BackColor = AppTheme.Background,
                 Margin = Padding.Empty
             };
-            content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42));
-            content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 58));
+            content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            content.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             content.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             content.Controls.Add(BuildHistoryCard(), 0, 0);
             content.Controls.Add(BuildEditorCard(), 1, 0);
@@ -426,6 +426,7 @@ namespace GUI.Forms.Warehouse
             grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = InputBg;
             grid.ColumnHeadersDefaultCellStyle.SelectionForeColor = LabelGray;
             grid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            grid.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;   // tiêu đề không bị xuống dòng
             grid.ColumnHeadersDefaultCellStyle.Padding = new Padding(S(8), 0, 0, 0);
             grid.RowTemplate.Height = S(38);
             grid.DefaultCellStyle.ForeColor = AppTheme.TextDark;
@@ -436,7 +437,7 @@ namespace GUI.Forms.Warehouse
         }
 
         protected DataGridViewTextBoxColumn TextColumn(string header, string property, int fillWeight = 0, int width = 0,
-            string? format = null, bool right = false)
+            string? format = null, bool right = false, int minWidth = 80)
         {
             var col = new DataGridViewTextBoxColumn
             {
@@ -448,6 +449,7 @@ namespace GUI.Forms.Warehouse
             {
                 col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                 col.FillWeight = fillWeight;
+                col.MinimumWidth = S(minWidth);   // hẹp quá thì hiện thanh cuộn ngang thay vì bóp cột
             }
             else
             {
