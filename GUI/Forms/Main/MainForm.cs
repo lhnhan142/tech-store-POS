@@ -1,4 +1,5 @@
-﻿using GUI.Forms.Sales;
+﻿using BLL.Services.Interfaces;
+using GUI.Forms.Sales;
 using GUI.Forms.Warehouse;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,6 +19,10 @@ namespace GUI.Forms.Main
         private readonly Dictionary<Page, Button> _navButtons = new();
         private Page? _current;
 
+        // Mục "Cảnh báo tồn kho" có huy hiệu hiển thị số sản phẩm đang bị cảnh báo
+        private const string AlertPageText = "Cảnh báo tồn kho";
+        private Page? _alertPage;
+
         // Constructor cho Visual Studio Designer (không có logic)
         public MainForm()
         {
@@ -35,14 +40,25 @@ namespace GUI.Forms.Main
                 new Page("Bán hàng", "Bán hàng (POS)",    () => new POSControl()),
                 new Page("Kho",      "Sản phẩm",          () => Placeholder("Quản lý sản phẩm")),
                 new Page("Kho",      "Nhà cung cấp",      () => AsChild(_sp!.GetRequiredService<SupplierForm>())),
+                new Page("Kho",      "Phiếu nhập kho",    () => AsChild(_sp!.GetRequiredService<ReceiptForm>())),
+                new Page("Kho",      "Phiếu xuất kho",    () => AsChild(_sp!.GetRequiredService<IssueForm>())),
+                new Page("Kho",      "Kiểm kê kho",       () => AsChild(_sp!.GetRequiredService<StockTakeForm>())),
+                new Page("Kho",      AlertPageText,       () => AsChild(_sp!.GetRequiredService<StockAlertForm>())),
                 new Page("Nhân sự",  "Nhân viên",         () => Placeholder("Quản lý nhân viên")),
                 new Page("Nhân sự",  "Chấm công",         () => Placeholder("Chấm công")),
                 new Page("Báo cáo",  "Báo cáo doanh thu", () => Placeholder("Báo cáo doanh thu")),
             });
 
+            _alertPage = _pages.First(p => p.Text == AlertPageText);
+
             BuildMenu();
             BuildSidebar();
             Load += (_, _) => NavigateTo(_pages[0]); // mặc định mở trang đầu tiên
+
+            // Huy hiệu cảnh báo: cập nhật lúc mở app và mỗi khi tồn kho thay đổi (nhập/xuất/kiểm kê...)
+            Load += async (_, _) => await RefreshAlertBadgeAsync();
+            StockEvents.Changed += OnStockChanged;
+            FormClosed += (_, _) => StockEvents.Changed -= OnStockChanged;
         }
 
         // ------------------------------------------------ Dựng phần động
@@ -103,6 +119,28 @@ namespace GUI.Forms.Main
             _current = page;
             lblTitle.Text = page.Text;
             HighlightNav(page);
+        }
+
+        // ------------------------------------------------- Huy hiệu cảnh báo tồn kho
+        private void OnStockChanged() => _ = RefreshAlertBadgeAsync();
+
+        private async Task RefreshAlertBadgeAsync()
+        {
+            if (_sp is null || _alertPage is null) return;
+            try
+            {
+                using var scope = _sp.CreateScope();
+                var alerts = await scope.ServiceProvider.GetRequiredService<IStockAlertService>().GetAlertsAsync();
+                if (IsDisposed) return;
+
+                var btn = _navButtons[_alertPage];
+                btn.Text = alerts.Count > 0 ? $"{AlertPageText} ({alerts.Count})" : AlertPageText;
+                btn.ForeColor = alerts.Count > 0 ? Color.FromArgb(255, 183, 77) : Color.White;
+            }
+            catch
+            {
+                // Huy hiệu chỉ là phần phụ: lỗi kết nối CSDL không được làm hỏng màn hình chính
+            }
         }
 
         private void HighlightNav(Page active)

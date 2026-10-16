@@ -21,6 +21,10 @@ namespace DAL.Context
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<InventoryReceipt> InventoryReceipts { get; set; }
         public DbSet<InventoryReceiptDetail> InventoryReceiptDetails { get; set; }
+        public DbSet<StockIssue> StockIssues { get; set; }
+        public DbSet<StockIssueDetail> StockIssueDetails { get; set; }
+        public DbSet<StockTake> StockTakes { get; set; }
+        public DbSet<StockTakeDetail> StockTakeDetails { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
@@ -49,6 +53,44 @@ namespace DAL.Context
                 .HasOne(r => r.Supplier)
                 .WithMany(s => s.InventoryReceipts)
                 .HasForeignKey(r => r.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Phiếu xuất / kiểm kê: không xóa người lập hay sản phẩm đã nằm trong phiếu;
+            // xóa phiếu thì xóa luôn các dòng chi tiết
+            modelBuilder.Entity<StockIssue>()
+                .HasOne(i => i.User)
+                .WithMany()
+                .HasForeignKey(i => i.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StockIssueDetail>()
+                .HasOne(d => d.Issue)
+                .WithMany(i => i.Details)
+                .HasForeignKey(d => d.IssueId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StockIssueDetail>()
+                .HasOne(d => d.Product)
+                .WithMany()
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StockTake>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StockTakeDetail>()
+                .HasOne(d => d.StockTake)
+                .WithMany(t => t.Details)
+                .HasForeignKey(d => d.StockTakeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StockTakeDetail>()
+                .HasOne(d => d.Product)
+                .WithMany()
+                .HasForeignKey(d => d.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
