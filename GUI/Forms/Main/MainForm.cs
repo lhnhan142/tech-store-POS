@@ -1,4 +1,5 @@
 ﻿using BLL.Services.Interfaces;
+using GUI.Forms.Products;
 using GUI.Forms.Sales;
 using GUI.Forms.Warehouse;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,7 +39,9 @@ namespace GUI.Forms.Main
             _pages.AddRange(new[]
             {
                 new Page("Bán hàng", "Bán hàng (POS)",    () => new POSControl()),
-                new Page("Kho",      "Sản phẩm",          () => Placeholder("Quản lý sản phẩm")),
+                new Page("Kho",      "Sản phẩm",          () => AsChild(_sp!.GetRequiredService<ProductForm>())),
+                new Page("Kho",      "Danh mục",          () => AsChild(_sp!.GetRequiredService<CategoryForm>())),
+                new Page("Kho",      "Thương hiệu",       () => AsChild(_sp!.GetRequiredService<BrandForm>())),
                 new Page("Kho",      "Nhà cung cấp",      () => AsChild(_sp!.GetRequiredService<SupplierForm>())),
                 new Page("Kho",      "Phiếu nhập kho",    () => AsChild(_sp!.GetRequiredService<ReceiptForm>())),
                 new Page("Kho",      "Phiếu xuất kho",    () => AsChild(_sp!.GetRequiredService<IssueForm>())),

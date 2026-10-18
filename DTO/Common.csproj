@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -7,8 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Đọc/ghi file Excel (.xlsx) -->
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Constants\" />
-    <Folder Include="Utilities\" />
   </ItemGroup>
 
 </Project>

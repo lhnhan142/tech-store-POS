@@ -24,5 +24,10 @@ namespace DAL.Entities
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }
+
+        // Thương hiệu (không bắt buộc)
+        public int? BrandId { get; set; }
+        [ForeignKey("BrandId")]
+        public Brand? Brand { get; set; }
     }
 }

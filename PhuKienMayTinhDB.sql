@@ -52,6 +52,14 @@ CREATE TABLE Categories (
     UpdatedAt DATETIME2 NULL
 );
 
+-- Bảng Brands (Thương hiệu)
+CREATE TABLE Brands (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Name NVARCHAR(100) NOT NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+    UpdatedAt DATETIME2 NULL
+);
+
 -- Bảng Products (Sản phẩm)
 CREATE TABLE Products (
     Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -61,9 +69,11 @@ CREATE TABLE Products (
     StockQuantity INT NOT NULL DEFAULT 0,
     ImageUrl NVARCHAR(MAX) NULL,
     CategoryId INT NOT NULL,
+    BrandId INT NULL,
     CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
     UpdatedAt DATETIME2 NULL,
-    CONSTRAINT FK_Products_Categories FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+    CONSTRAINT FK_Products_Categories FOREIGN KEY (CategoryId) REFERENCES Categories(Id),
+    CONSTRAINT FK_Products_Brands FOREIGN KEY (BrandId) REFERENCES Brands(Id)
 );
 
 -- Bảng Suppliers (Nhà cung cấp)
@@ -222,6 +232,14 @@ INSERT INTO Products (Name, Barcode, Price, StockQuantity, ImageUrl, CategoryId)
 (N'Ổ cứng SSD Samsung 980 PRO 1TB PCIe 4.0', '880123456810', 2300000, 40, 'ssd_ss.jpg', 6),
 (N'Balo Laptop Targus 15.6 inch', '880123456815', 750000, 60, 'balo.jpg', 8),
 (N'Ghế Gaming DXRacer Master Series', '880123456818', 8500000, 5, 'dxracer.jpg', 10);
+
+-- Thêm Thương hiệu + gán cho sản phẩm mẫu
+INSERT INTO Brands (Name) VALUES
+(N'Logitech'), (N'Razer'), (N'Akko'), (N'DareU'), (N'HyperX'), (N'Sony'),
+(N'LG'), (N'Corsair'), (N'Samsung'), (N'Targus'), (N'DXRacer');
+
+UPDATE p SET BrandId = b.Id
+FROM Products p JOIN Brands b ON p.Name LIKE N'%' + b.Name + N'%';
 
 -- Thêm Nhà cung cấp
 INSERT INTO Suppliers (Name, Phone, Address) VALUES 

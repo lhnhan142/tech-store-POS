@@ -17,6 +17,7 @@ namespace DAL.Context
         public DbSet<User> Users { get; set; }
         public DbSet<Attendance> Attendances { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Brand> Brands { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<InventoryReceipt> InventoryReceipts { get; set; }
@@ -40,6 +41,19 @@ namespace DAL.Context
                 new Role { Id = 3, Name = "Nhân viên bán hàng" },
                 new Role { Id = 4, Name = "Nhân viên kho" }
             );
+
+            // Sản phẩm: không cho xóa danh mục / thương hiệu đang có sản phẩm (khớp FK trong SQL)
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Brand)
+                .WithMany(b => b.Products)
+                .HasForeignKey(p => p.BrandId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Cấu hình Relationship tránh lỗi vòng lặp cascade delete
             modelBuilder.Entity<Order>()

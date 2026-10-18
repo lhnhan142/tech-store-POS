@@ -4,6 +4,7 @@ using BLL.Services.Interfaces;
 using DAL.Context;
 using DAL.Repositories.Implementations;
 using DAL.Repositories.Interfaces;
+using GUI.Forms.Products;
 using GUI.Forms.Warehouse;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -38,18 +39,32 @@ namespace GUI
                     services.AddScoped<IOrderRepository, OrderRepository>();
                     services.AddScoped<ISupplierRepository, SupplierRepository>();
                     services.AddScoped<IInventoryRepository, InventoryRepository>();
+                    services.AddScoped<ICategoryRepository, CategoryRepository>();
+                    services.AddScoped<IBrandRepository, BrandRepository>();
 
                     // 3. Services (BLL)
                     services.AddScoped(typeof(IService<>), typeof(BaseService<>));
                     services.AddScoped<ISupplierService, SupplierService>();
                     services.AddScoped<IInventoryService, InventoryService>();
                     services.AddScoped<IStockAlertService, StockAlertService>();
+                    services.AddScoped<IProductService, ProductService>();
+                    services.AddScoped<ICategoryService, CategoryService>();
+                    services.AddScoped<IBrandService, BrandService>();
+                    services.AddScoped<IProductExcelService, ProductExcelService>();
+                    services.AddSingleton(new ProductImageSettings
+                    {
+                        // Cùng thư mục mà POS đọc ảnh (Images\Products cạnh file .exe)
+                        Folder = Path.Combine(AppContext.BaseDirectory, "Images", "Products")
+                    });
                     services.AddSingleton(new InventorySettings
                     {
                         LowStockThreshold = context.Configuration.GetValue("Inventory:LowStockThreshold", 10)
                     });
 
                     // 4. Forms (Transient, mỗi lần mở là một instance mới)
+                    services.AddTransient<ProductForm>();
+                    services.AddTransient<CategoryForm>();
+                    services.AddTransient<BrandForm>();
                     services.AddTransient<SupplierForm>();
                     services.AddTransient<ReceiptForm>();
                     services.AddTransient<IssueForm>();
