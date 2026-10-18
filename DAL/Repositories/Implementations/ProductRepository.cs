@@ -28,5 +28,34 @@ namespace DAL.Repositories.Implementations
         {
             return await _dbSet.Where(p => p.StockQuantity <= threshold).ToListAsync();
         }
+
+        public async Task<List<Product>> GetAllWithDetailsAsync()
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .OrderBy(p => p.Name)
+                .ToListAsync();
+        }
+
+        public async Task<bool> BarcodeExistsAsync(string barcode, int? excludeId = null)
+        {
+            return await _dbSet.AnyAsync(p => p.Barcode == barcode && (excludeId == null || p.Id != excludeId));
+        }
+
+        public async Task<bool> NameExistsAsync(string name, int? excludeId = null)
+        {
+            var lower = name.ToLower();
+            return await _dbSet.AnyAsync(p => p.Name.ToLower() == lower && (excludeId == null || p.Id != excludeId));
+        }
+
+        public async Task<bool> HasTransactionsAsync(int id)
+        {
+            return await _context.OrderDetails.AnyAsync(d => d.ProductId == id)
+                || await _context.InventoryReceiptDetails.AnyAsync(d => d.ProductId == id)
+                || await _context.StockIssueDetails.AnyAsync(d => d.ProductId == id)
+                || await _context.StockTakeDetails.AnyAsync(d => d.ProductId == id);
+        }
     }
 }
