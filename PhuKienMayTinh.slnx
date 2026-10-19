@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="PhuKienMayTinh.BLL/PhuKienMayTinh.BLL.csproj" />
+  <Project Path="PhuKienMayTinh.Common/PhuKienMayTinh.Common.csproj" />
+  <Project Path="PhuKienMayTinh.DAL/PhuKienMayTinh.DAL.csproj" />
+  <Project Path="PhuKienMayTinh.GUI/PhuKienMayTinh.GUI.csproj" />
+</Solution>
