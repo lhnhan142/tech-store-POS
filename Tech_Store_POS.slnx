@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/Database/">
-    <File Path="PhuKienMayTinhDB.sql" />
+    <File Path="Database/database.sql" />
   </Folder>
   <Project Path="BLL/BLL.csproj" Id="c0b1850b-a953-47b5-8efe-0e9ae54bf644" />
   <Project Path="DAL/DAL.csproj" Id="695a98d9-2023-407b-9af5-e34bc04ce97a" />

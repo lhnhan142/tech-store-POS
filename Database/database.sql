@@ -201,21 +201,26 @@ INSERT INTO Roles (Name) VALUES (N'Admin'), (N'Quản lý'), (N'Nhân viên bán
 
 -- Thêm Tài khoản
 INSERT INTO Users (Username, PasswordHash, FullName, RoleId, Status) VALUES 
-('admin', 'hashed_pw_123', N'Quản trị viên', 1, 0), -- Id: 1
-('quanly1', 'hashed_pw_123', N'Trần Văn Quản', 2, 0), -- Id: 2
-('banhang1', 'hashed_pw_123', N'Nguyễn Thị Bán', 3, 0), -- Id: 3
-('banhang2', 'hashed_pw_123', N'Lê Bán Hàng', 3, 0), -- Id: 4
-('kho1', 'hashed_pw_123', N'Phạm Văn Kho', 4, 0), -- Id: 5
-('banhang3', 'hashed_pw_123', N'Phạm Hoàng Long', 3, 0), -- Id: 6
-('banhang4', 'hashed_pw_123', N'Đỗ Thị Mai', 3, 0), -- Id: 7
-('kho2', 'hashed_pw_123', N'Vũ Ngọc Tuấn', 4, 0), -- Id: 8
-('kho3', 'hashed_pw_123', N'Bùi Thanh Sơn', 4, 1); -- Id: 9
+('admin', 'hashed_pw_123', N'Quản trị viên', 1, 0),
+('quanly1', 'hashed_pw_123', N'Trần Văn Quản', 2, 0),
+('banhang1', 'hashed_pw_123', N'Nguyễn Thị Bán', 3, 0),
+('banhang2', 'hashed_pw_123', N'Lê Bán Hàng', 3, 0),
+('kho1', 'hashed_pw_123', N'Phạm Văn Kho', 4, 0),
+('banhang3', 'hashed_pw_123', N'Phạm Hoàng Long', 3, 0),
+('banhang4', 'hashed_pw_123', N'Đỗ Thị Mai', 3, 0),
+('kho2', 'hashed_pw_123', N'Vũ Ngọc Tuấn', 4, 0),
+('kho3', 'hashed_pw_123', N'Bùi Thanh Sơn', 4, 1);
 
 -- Thêm Danh mục
 INSERT INTO Categories (Name) VALUES 
 (N'Chuột máy tính'), (N'Bàn phím'), (N'Tai nghe'), (N'Màn hình'), (N'Lót chuột'),
 (N'Linh kiện PC (RAM, Ổ cứng)'), (N'Vỏ Case & Tản nhiệt'), (N'Balo & Túi chống sốc'), 
 (N'Webcam & Microphone'), (N'Ghế & Bàn Gaming');
+
+-- Thêm Thương hiệu
+INSERT INTO Brands (Name) VALUES
+(N'Logitech'), (N'Razer'), (N'Akko'), (N'DareU'), (N'HyperX'), (N'Sony'),
+(N'LG'), (N'Corsair'), (N'Samsung'), (N'Targus'), (N'DXRacer');
 
 -- Thêm Sản phẩm
 INSERT INTO Products (Name, Barcode, Price, StockQuantity, ImageUrl, CategoryId) VALUES 
@@ -233,11 +238,7 @@ INSERT INTO Products (Name, Barcode, Price, StockQuantity, ImageUrl, CategoryId)
 (N'Balo Laptop Targus 15.6 inch', '880123456815', 750000, 60, 'balo.jpg', 8),
 (N'Ghế Gaming DXRacer Master Series', '880123456818', 8500000, 5, 'dxracer.jpg', 10);
 
--- Thêm Thương hiệu + gán cho sản phẩm mẫu
-INSERT INTO Brands (Name) VALUES
-(N'Logitech'), (N'Razer'), (N'Akko'), (N'DareU'), (N'HyperX'), (N'Sony'),
-(N'LG'), (N'Corsair'), (N'Samsung'), (N'Targus'), (N'DXRacer');
-
+-- Gán BrandId cho sản phẩm 
 UPDATE p SET BrandId = b.Id
 FROM Products p JOIN Brands b ON p.Name LIKE N'%' + b.Name + N'%';
 
@@ -258,9 +259,9 @@ INSERT INTO Customers (Name, Phone, RewardPoints) VALUES
 
 -- Thêm Phiếu nhập kho (Receipts)
 INSERT INTO InventoryReceipts (SupplierId, UserId, ReceiptDate, TotalAmount) VALUES 
-(1, 5, GETDATE(), 19500000), -- Id: 1
-(3, 5, DATEADD(day, -1, GETDATE()), 35000000), -- Id: 2
-(4, 8, DATEADD(day, -2, GETDATE()), 85000000); -- Id: 3
+(1, 5, GETDATE(), 19500000), 
+(3, 5, DATEADD(day, -1, GETDATE()), 35000000),
+(4, 8, DATEADD(day, -2, GETDATE()), 85000000);
 
 -- Thêm Chi tiết nhập kho
 INSERT INTO InventoryReceiptDetails (ReceiptId, ProductId, Quantity, UnitPrice) VALUES 
@@ -271,14 +272,14 @@ INSERT INTO InventoryReceiptDetails (ReceiptId, ProductId, Quantity, UnitPrice) 
 
 -- Thêm Hóa đơn bán hàng (Orders)
 INSERT INTO Orders (CustomerId, UserId, OrderDate, TotalAmount, DiscountAmount, Status, PaymentMethod) VALUES 
-(1, 3, GETDATE(), 1590000, 0, 1, 0), -- Id: 1
-(3, 3, GETDATE(), 3400000, 0, 1, 1), -- Id: 2
-(4, 6, GETDATE(), 2500000, 100000, 1, 2), -- Id: 3
-(4, 3, DATEADD(day, -1, GETDATE()), 750000, 0, 1, 0), -- Id: 4
-(2, 6, DATEADD(day, -1, GETDATE()), 6200000, 200000, 1, 1), -- Id: 5
-(5, 7, GETDATE(), 1990000, 0, 0, 1), -- Id: 6 (Pending)
-(1, 3, DATEADD(day, -2, GETDATE()), 1450000, 0, 2, 0), -- Id: 7 (Cancelled)
-(3, 6, DATEADD(day, -3, GETDATE()), 1650000, 0, 3, 2); -- Id: 8 (Returned)
+(1, 3, GETDATE(), 1590000, 0, 1, 0), 
+(3, 3, GETDATE(), 3400000, 0, 1, 1), 
+(4, 6, GETDATE(), 2500000, 100000, 1, 2), 
+(4, 3, DATEADD(day, -1, GETDATE()), 750000, 0, 1, 0), 
+(2, 6, DATEADD(day, -1, GETDATE()), 6200000, 200000, 1, 1), 
+(5, 7, GETDATE(), 1990000, 0, 0, 1), 
+(1, 3, DATEADD(day, -2, GETDATE()), 1450000, 0, 2, 0), 
+(3, 6, DATEADD(day, -3, GETDATE()), 1650000, 0, 3, 2); 
 
 -- Thêm Chi tiết hóa đơn bán hàng
 INSERT INTO OrderDetails (OrderId, ProductId, Quantity, UnitPrice) VALUES 
