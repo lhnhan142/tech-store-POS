@@ -45,6 +45,7 @@ namespace GUI
                     // 3. Services (BLL)
                     services.AddScoped(typeof(IService<>), typeof(BaseService<>));
                     services.AddScoped<ISupplierService, SupplierService>();
+                    services.AddScoped<IAuthService, AuthService>();
                     services.AddScoped<IInventoryService, InventoryService>();
                     services.AddScoped<IStockAlertService, StockAlertService>();
                     services.AddScoped<IProductService, ProductService>();
@@ -70,15 +71,25 @@ namespace GUI
                     services.AddTransient<IssueForm>();
                     services.AddTransient<StockTakeForm>();
                     services.AddTransient<StockAlertForm>();
-                    // services.AddTransient<GUI.Auth.LoginForm>()
+                    services.AddTransient<GUI.Forms.Auth.LoginForm>();
                     services.AddTransient<GUI.Forms.Main.MainForm>();
                 })
                 .Build();
 
             ServiceProvider = host.Services;
 
-            // Mở form khởi động (sau này đổi thành LoginForm)
-            Application.Run(ServiceProvider.GetRequiredService<GUI.Forms.Main.MainForm>());
+            // Đăng nhập -> Màn hình chính -> (Đăng xuất thì quay lại Đăng nhập)
+            while (true)
+            {
+                using (var login = ServiceProvider.GetRequiredService<GUI.Forms.Auth.LoginForm>())
+                {
+                    if (login.ShowDialog() != DialogResult.OK) break;   // đóng form đăng nhập = thoát
+                }
+
+                var main = ServiceProvider.GetRequiredService<GUI.Forms.Main.MainForm>();
+                Application.Run(main);
+                if (!main.LoggedOut) break;                             // bấm X ở MainForm = thoát hẳn
+            }
         }
     }
 }   

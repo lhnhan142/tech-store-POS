@@ -19,6 +19,7 @@ namespace GUI.Forms.Main
         private readonly List<Page> _pages = new();
         private readonly Dictionary<Page, Button> _navButtons = new();
         private Page? _current;
+        public bool LoggedOut { get; private set; }
 
         // Mục "Cảnh báo tồn kho" có huy hiệu hiển thị số sản phẩm đang bị cảnh báo
         private const string AlertPageText = "Cảnh báo tồn kho";
@@ -171,7 +172,16 @@ namespace GUI.Forms.Main
         // ------------------------------------------------- Sự kiện
         private void mnuLogout_Click(object? sender, EventArgs e) => Logout();
         private void mnuExit_Click(object? sender, EventArgs e) => Application.Exit();
-        private void btnLogout_Click(object? sender, EventArgs e) => Logout();
+        private void btnLogout_Click(object? sender, EventArgs e)
+        {
+            var ask = MessageBox.Show("Bạn có chắc muốn đăng xuất?", "Đăng xuất",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (ask != DialogResult.Yes) return;
+
+            AppSession.SignOut();
+            LoggedOut = true;   // Program.cs thấy cờ này thì quay lại màn đăng nhập
+            Close();
+        }
 
         private void Logout()
         {

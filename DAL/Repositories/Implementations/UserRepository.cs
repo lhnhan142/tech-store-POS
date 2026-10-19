@@ -14,7 +14,7 @@ namespace DAL.Repositories.Implementations
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            return await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
+            return await _dbSet.Include(u => u.Role).FirstOrDefaultAsync(u => u.Username == username);
         }
 
         public async Task<bool> IsUsernameExistsAsync(string username)
