@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -9,7 +9,10 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using BLL.DTOs;
+using BLL.DTOs.Invoice;
+using BLL.Services.Interfaces;
 using GUI.UserControls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GUI.Forms.Sales
 {
@@ -325,7 +328,11 @@ namespace GUI.Forms.Sales
             _cart.RemoveAll(x => x.ProductId == productId);
             RefreshCart();
         }
-
+        private decimal CalcTotal()
+        {
+            decimal subtotal = _cart.Sum(x => x.LineTotal);
+            return Math.Max(0, subtotal - _discount + _tax);
+        }
         // Vẽ lại danh sách giỏ hàng và tính lại tổng tiền
         private void RefreshCart()
         {
@@ -366,7 +373,7 @@ namespace GUI.Forms.Sales
                 c.Width = w;
         }
 
-        private void BtnPay_Click(object? sender, EventArgs e)
+        private async void BtnPay_Click(object? sender, EventArgs e)
         {
             if (_cart.Count == 0)
             {
@@ -375,9 +382,53 @@ namespace GUI.Forms.Sales
                 return;
             }
 
-            // TODO: gọi ISalesService.CreateOrder(...) khi BLL xong
-            MessageBox.Show($"Thanh toán thành công: {lblTotal.Text}", "Thanh toán",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            decimal total = CalcTotal();
+
+            using var frm = new PaymentForm(total);
+            if (frm.ShowDialog(this) != DialogResult.OK) return;
+
+            string invoiceNo = "";
+            try
+            {
+                if (Program.ServiceProvider != null)
+                {
+                    using var scope = Program.ServiceProvider.CreateScope();
+                    var invoiceService = scope.ServiceProvider.GetRequiredService<IInvoiceService>();
+
+                    decimal subtotal = _cart.Sum(x => x.LineTotal);
+                    var dto = new CreateSaleInvoiceDto(
+                        CustomerId: 1, // Khách hàng mặc định trong CSDL (Nguyễn Văn A)
+                        SubTotal: subtotal,
+                        DiscountAmount: _discount,
+                        TotalAmount: total,
+                        PaymentMethod: frm.SelectedMethod,
+                        Items: _cart.Select(c => new CreateSaleInvoiceItemDto(
+                            ProductId: c.ProductId,
+                            ProductName: c.Name,
+                            Qty: c.Quantity,
+                            UnitPrice: c.UnitPrice,
+                            DiscountAlloc: 0,
+                            LineTotal: c.LineTotal
+                        )).ToList()
+                    );
+
+                    invoiceNo = await invoiceService.CreateSaleInvoiceAsync(dto);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi lưu hóa đơn: {ex.Message}", "Lỗi",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            MessageBox.Show(
+                $"Thanh toán thành công!\n" +
+                $"Mã hóa đơn: {invoiceNo}\n" +
+                $"Tổng tiền: {Money(total)}\n" +
+                $"Tiền thừa: {Money(frm.Change)}\n\n" +
+                "Hóa đơn đã được lưu vào hệ thống để thử nghiệm đổi trả.",
+                "Thanh toán hoàn tất", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             _cart.Clear();
             RefreshCart();

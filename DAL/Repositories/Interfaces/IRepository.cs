@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -27,6 +27,13 @@ namespace DAL.Repositories.Interfaces
 
         // Xóa
         void Delete(T entity);
+
+        // Phân trang
+        Task<(IReadOnlyList<T> Items, int TotalCount)> GetPagedAsync(
+            Expression<Func<T, bool>>? predicate,
+            int pageIndex,
+            int pageSize,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
 
         // Lưu các thay đổi xuống DB (Commit)
         Task<int> SaveChangesAsync();

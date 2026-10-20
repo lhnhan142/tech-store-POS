@@ -1,4 +1,4 @@
-﻿using BLL.Services;
+using BLL.Services;
 using BLL.Services.Implementations;
 using BLL.Services.Interfaces;
 using DAL.Context;
@@ -6,6 +6,7 @@ using DAL.Repositories.Implementations;
 using DAL.Repositories.Interfaces;
 using GUI.Forms.Products;
 using GUI.Forms.Warehouse;
+using GUI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,6 +42,11 @@ namespace GUI
                     services.AddScoped<IInventoryRepository, InventoryRepository>();
                     services.AddScoped<ICategoryRepository, CategoryRepository>();
                     services.AddScoped<IBrandRepository, BrandRepository>();
+                    services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+                    services.AddScoped<IReturnRepository, ReturnRepository>();
+                    services.AddScoped<IReturnPolicyRepository, ReturnPolicyRepository>();
+                    services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+                    services.AddScoped<IUnitOfWork, UnitOfWork>();
 
                     // 3. Services (BLL)
                     services.AddScoped(typeof(IService<>), typeof(BaseService<>));
@@ -52,6 +58,11 @@ namespace GUI
                     services.AddScoped<ICategoryService, CategoryService>();
                     services.AddScoped<IBrandService, BrandService>();
                     services.AddScoped<IProductExcelService, ProductExcelService>();
+                    services.AddScoped<IInvoiceService, InvoiceService>();
+                    services.AddScoped<IReturnService, ReturnService>();
+                    services.AddScoped<IReturnReportService, ReturnReportService>();
+                    services.AddSingleton<UserSession>();
+                    services.AddSingleton<ICurrentUserService>(sp => sp.GetRequiredService<UserSession>());
                     services.AddSingleton(new ProductImageSettings
                     {
                         // Cùng thư mục mà POS đọc ảnh (Images\Products cạnh file .exe)
@@ -73,12 +84,33 @@ namespace GUI
                     services.AddTransient<StockAlertForm>();
                     services.AddTransient<GUI.Forms.Auth.LoginForm>();
                     services.AddTransient<GUI.Forms.Main.MainForm>();
+                    services.AddTransient<GUI.Forms.InvoiceAndReturn.frmDanhSachHoaDon>();
+                    services.AddTransient<GUI.Forms.InvoiceAndReturn.frmYeuCauDoiTra>();
+                    services.AddTransient<GUI.Forms.InvoiceAndReturn.frmNhanHang>();
+                    services.AddTransient<GUI.Forms.InvoiceAndReturn.frmBaoCaoDoiTra>();
                 })
                 .Build();
 
             ServiceProvider = host.Services;
 
-            // Đăng nhập -> Màn hình chính -> (Đăng xuất thì quay lại Đăng nhập)
+            // Chạy riêng từng màn hình nếu truyền tham số dòng lệnh (tiện lợi cho việc test nhanh)
+            if (args.Contains("--supplier"))
+            {
+                Application.Run(ServiceProvider.GetRequiredService<SupplierForm>());
+                return;
+            }
+            if (args.Contains("--pos"))
+            {
+                Application.Run(new GUI.Forms.Sales.POSTestForm());
+                return;
+            }
+            if (args.Contains("--don-hang") || args.Contains("--invoice"))
+            {
+                Application.Run(ServiceProvider.GetRequiredService<GUI.Forms.InvoiceAndReturn.frmDanhSachHoaDon>());
+                return;
+            }
+
+            // Mặc định: Đăng nhập -> Màn hình chính -> (Đăng xuất thì quay lại Đăng nhập)
             while (true)
             {
                 using (var login = ServiceProvider.GetRequiredService<GUI.Forms.Auth.LoginForm>())
@@ -92,4 +124,4 @@ namespace GUI
             }
         }
     }
-}   
+}

@@ -1,4 +1,5 @@
-﻿using BLL.Services.Interfaces;
+using BLL.Services.Interfaces;
+using GUI.Forms.InvoiceAndReturn;
 using GUI.Forms.Products;
 using GUI.Forms.Sales;
 using GUI.Forms.Warehouse;
@@ -39,18 +40,22 @@ namespace GUI.Forms.Main
             // ===== Danh sách màn hình (sửa/thêm ở đây) =====
             _pages.AddRange(new[]
             {
-                new Page("Bán hàng", "Bán hàng (POS)",    () => new POSControl()),
-                new Page("Kho",      "Sản phẩm",          () => AsChild(_sp!.GetRequiredService<ProductForm>())),
-                new Page("Kho",      "Danh mục",          () => AsChild(_sp!.GetRequiredService<CategoryForm>())),
-                new Page("Kho",      "Thương hiệu",       () => AsChild(_sp!.GetRequiredService<BrandForm>())),
-                new Page("Kho",      "Nhà cung cấp",      () => AsChild(_sp!.GetRequiredService<SupplierForm>())),
-                new Page("Kho",      "Phiếu nhập kho",    () => AsChild(_sp!.GetRequiredService<ReceiptForm>())),
-                new Page("Kho",      "Phiếu xuất kho",    () => AsChild(_sp!.GetRequiredService<IssueForm>())),
-                new Page("Kho",      "Kiểm kê kho",       () => AsChild(_sp!.GetRequiredService<StockTakeForm>())),
-                new Page("Kho",      AlertPageText,       () => AsChild(_sp!.GetRequiredService<StockAlertForm>())),
-                new Page("Nhân sự",  "Nhân viên",         () => Placeholder("Quản lý nhân viên")),
-                new Page("Nhân sự",  "Chấm công",         () => Placeholder("Chấm công")),
-                new Page("Báo cáo",  "Báo cáo doanh thu", () => Placeholder("Báo cáo doanh thu")),
+                new Page("Bán hàng", "Bán hàng (POS)",       () => new POSControl()),
+                new Page("Bán hàng", "Quản lý đơn hàng",     () => AsChild(_sp!.GetRequiredService<frmDanhSachHoaDon>())),
+                new Page("Bán hàng", "Yêu cầu đổi trả",      () => AsChild(_sp!.GetRequiredService<frmYeuCauDoiTra>())),
+                new Page("Kho",      "Sản phẩm",             () => AsChild(_sp!.GetRequiredService<ProductForm>())),
+                new Page("Kho",      "Danh mục",             () => AsChild(_sp!.GetRequiredService<CategoryForm>())),
+                new Page("Kho",      "Thương hiệu",          () => AsChild(_sp!.GetRequiredService<BrandForm>())),
+                new Page("Kho",      "Nhà cung cấp",         () => AsChild(_sp!.GetRequiredService<SupplierForm>())),
+                new Page("Kho",      "Phiếu nhập kho",       () => AsChild(_sp!.GetRequiredService<ReceiptForm>())),
+                new Page("Kho",      "Phiếu xuất kho",       () => AsChild(_sp!.GetRequiredService<IssueForm>())),
+                new Page("Kho",      "Kiểm kê kho",          () => AsChild(_sp!.GetRequiredService<StockTakeForm>())),
+                new Page("Kho",      AlertPageText,          () => AsChild(_sp!.GetRequiredService<StockAlertForm>())),
+                new Page("Kho",      "Nhận hàng hoàn",       () => AsChild(_sp!.GetRequiredService<frmNhanHang>())),
+                new Page("Nhân sự",  "Nhân viên",            () => Placeholder("Quản lý nhân viên")),
+                new Page("Nhân sự",  "Chấm công",            () => Placeholder("Chấm công")),
+                new Page("Báo cáo",  "Báo cáo doanh thu",    () => Placeholder("Báo cáo doanh thu")),
+                new Page("Báo cáo",  "Báo cáo đổi trả",      () => AsChild(_sp!.GetRequiredService<frmBaoCaoDoiTra>())),
             });
 
             _alertPage = _pages.First(p => p.Text == AlertPageText);
