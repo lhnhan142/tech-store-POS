@@ -153,7 +153,7 @@ namespace GUI.Forms.InvoiceAndReturn
             _pnlDebugRole.BackColor = Color.Transparent;
 
             _lblDebugRole.Text = "Vai trò (DEBUG):";
-            _lblDebugRole.ForeColor = Color.FromArgb(209, 250, 229);
+            _lblDebugRole.ForeColor = Color.FromArgb(219, 234, 254);
             _lblDebugRole.AutoSize = true;
             _lblDebugRole.Location = new Point(0, 12);
 

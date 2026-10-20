@@ -93,7 +93,7 @@ namespace GUI.Forms.InvoiceAndReturn
             _lblTitle.Location = new Point(20, 18);
 
             _lblDaysRemaining.Font = InvoiceTheme.BodyBoldFont;
-            _lblDaysRemaining.ForeColor = Color.FromArgb(209, 250, 229);
+            _lblDaysRemaining.ForeColor = Color.FromArgb(219, 234, 254);
             _lblDaysRemaining.AutoSize = true;
             _lblDaysRemaining.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             _lblDaysRemaining.Location = new Point(950, 22);
@@ -423,7 +423,7 @@ namespace GUI.Forms.InvoiceAndReturn
                 : $"ĐÃ QUÁ HẠN {_invoice.DaysRemainingForReturn * -1} NGÀY (Cần duyệt đặc biệt)";
             _lblDaysRemaining.Text = daysNotice;
             _lblDaysRemaining.ForeColor = _invoice.DaysRemainingForReturn >= 0
-                ? Color.FromArgb(209, 250, 229)
+                ? Color.FromArgb(219, 234, 254)
                 : Color.FromArgb(254, 202, 202);
 
             _lblCustomerInfo.Text = $"Khách hàng: {_invoice.CustomerName ?? "Khách vãng lai"}\n" +

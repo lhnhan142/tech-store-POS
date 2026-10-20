@@ -365,7 +365,7 @@ namespace GUI.Forms.InvoiceAndReturn
             _btnHoanTat.UseMnemonic = false;
             _btnHoanTat.Size = new Size(360, 44);
             _btnHoanTat.Location = new Point(0, 58);
-            _btnHoanTat.BackColor = Color.FromArgb(5, 150, 105);
+            _btnHoanTat.BackColor = Color.FromArgb(2, 132, 199);
             _btnHoanTat.ForeColor = Color.White;
             _btnHoanTat.FlatStyle = FlatStyle.Flat;
             _btnHoanTat.FlatAppearance.BorderSize = 0;
