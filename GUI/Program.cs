@@ -1,8 +1,10 @@
+using BLL.Services;
 using BLL.Services.Implementations;
 using BLL.Services.Interfaces;
 using DAL.Context;
 using DAL.Repositories.Implementations;
 using DAL.Repositories.Interfaces;
+using GUI.Forms.Products;
 using GUI.Forms.Warehouse;
 using GUI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -14,79 +16,112 @@ namespace GUI
 {
     internal static class Program
     {
-        public static IServiceProvider? ServiceProvider { get; private set; }
+        public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
         [STAThread]
         static void Main(string[] args)
         {
             ApplicationConfiguration.Initialize();
 
-            // Khởi tạo Host cho Dependency Injection
             var host = Host.CreateDefaultBuilder()
-                .ConfigureAppConfiguration((context, builder) =>
-                {
-                    builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-                })
+                .UseContentRoot(AppContext.BaseDirectory)
+                .ConfigureAppConfiguration((_, builder) =>
+                    builder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
                 .ConfigureServices((context, services) =>
                 {
-                    // 1. Đăng ký Database Context
-                    var connectionString = context.Configuration.GetConnectionString("DefaultConnection");
-                    services.AddDbContext<AppDbContext>(options =>
-                        options.UseSqlServer(connectionString));
+                    // 1. Database
+                    var cs = context.Configuration.GetConnectionString("DefaultConnection");
+                    services.AddDbContext<AppDbContext>(o => o.UseSqlServer(cs));
 
-                    // 2. Đăng ký Repositories (DAL)
-                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>)); // Bắt buộc phải có cho Generic
+                    // 2. Repositories (DAL)
+                    services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
                     services.AddScoped<IUserRepository, UserRepository>();
                     services.AddScoped<IProductRepository, ProductRepository>();
                     services.AddScoped<IOrderRepository, OrderRepository>();
                     services.AddScoped<ISupplierRepository, SupplierRepository>();
+                    services.AddScoped<IInventoryRepository, InventoryRepository>();
+                    services.AddScoped<ICategoryRepository, CategoryRepository>();
+                    services.AddScoped<IBrandRepository, BrandRepository>();
                     services.AddScoped<IInvoiceRepository, InvoiceRepository>();
                     services.AddScoped<IReturnRepository, ReturnRepository>();
                     services.AddScoped<IReturnPolicyRepository, ReturnPolicyRepository>();
                     services.AddScoped<IStockMovementRepository, StockMovementRepository>();
                     services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-                    // 3. Đăng ký Services (BLL)
-                    services.AddScoped(typeof(IService<>), typeof(BaseService<>)); // BỔ SUNG DÒNG NÀY (Generic Service)
+                    // 3. Services (BLL)
+                    services.AddScoped(typeof(IService<>), typeof(BaseService<>));
                     services.AddScoped<ISupplierService, SupplierService>();
+                    services.AddScoped<IAuthService, AuthService>();
+                    services.AddScoped<IInventoryService, InventoryService>();
+                    services.AddScoped<IStockAlertService, StockAlertService>();
+                    services.AddScoped<IProductService, ProductService>();
+                    services.AddScoped<ICategoryService, CategoryService>();
+                    services.AddScoped<IBrandService, BrandService>();
+                    services.AddScoped<IProductExcelService, ProductExcelService>();
                     services.AddScoped<IInvoiceService, InvoiceService>();
                     services.AddScoped<IReturnService, ReturnService>();
                     services.AddScoped<IReturnReportService, ReturnReportService>();
                     services.AddSingleton<UserSession>();
                     services.AddSingleton<ICurrentUserService>(sp => sp.GetRequiredService<UserSession>());
+                    services.AddSingleton(new ProductImageSettings
+                    {
+                        // Cùng thư mục mà POS đọc ảnh (Images\Products cạnh file .exe)
+                        Folder = Path.Combine(AppContext.BaseDirectory, "Images", "Products")
+                    });
+                    services.AddSingleton(new InventorySettings
+                    {
+                        LowStockThreshold = context.Configuration.GetValue("Inventory:LowStockThreshold", 10)
+                    });
 
-                    // 4. Đăng ký các Form giao diện chính
+                    // 4. Forms (Transient, mỗi lần mở là một instance mới)
+                    services.AddTransient<ProductForm>();
+                    services.AddTransient<CategoryForm>();
+                    services.AddTransient<BrandForm>();
                     services.AddTransient<SupplierForm>();
+                    services.AddTransient<ReceiptForm>();
+                    services.AddTransient<IssueForm>();
+                    services.AddTransient<StockTakeForm>();
+                    services.AddTransient<StockAlertForm>();
+                    services.AddTransient<GUI.Forms.Auth.LoginForm>();
+                    services.AddTransient<GUI.Forms.Main.MainForm>();
                     services.AddTransient<GUI.Forms.InvoiceAndReturn.frmDanhSachHoaDon>();
                     services.AddTransient<GUI.Forms.InvoiceAndReturn.frmYeuCauDoiTra>();
                     services.AddTransient<GUI.Forms.InvoiceAndReturn.frmNhanHang>();
                     services.AddTransient<GUI.Forms.InvoiceAndReturn.frmBaoCaoDoiTra>();
-                    // VD: services.AddTransient<MainForm>();
-                    // VD: services.AddTransient<LoginForm>();
                 })
                 .Build();
 
             ServiceProvider = host.Services;
 
-            // Form khởi động:
-            // - Mặc định: Mở Quản lý đơn hàng & đổi trả
-            // - Tham số --supplier: Mở quản lý nhà cung cấp (dotnet run -- --supplier)
-            // - Tham số --pos: Mở màn hình POS thử nghiệm
-            Form first;
+            // Chạy riêng từng màn hình nếu truyền tham số dòng lệnh (tiện lợi cho việc test nhanh)
             if (args.Contains("--supplier"))
             {
-                first = ServiceProvider.GetRequiredService<SupplierForm>();
+                Application.Run(ServiceProvider.GetRequiredService<SupplierForm>());
+                return;
             }
-            else if (args.Contains("--pos"))
+            if (args.Contains("--pos"))
             {
-                first = new GUI.Forms.Sales.POSTestForm();
+                Application.Run(new GUI.Forms.Sales.POSTestForm());
+                return;
             }
-            else
+            if (args.Contains("--don-hang") || args.Contains("--invoice"))
             {
-                first = ServiceProvider.GetRequiredService<GUI.Forms.InvoiceAndReturn.frmDanhSachHoaDon>();
+                Application.Run(ServiceProvider.GetRequiredService<GUI.Forms.InvoiceAndReturn.frmDanhSachHoaDon>());
+                return;
             }
 
-            Application.Run(first);
+            // Mặc định: Đăng nhập -> Màn hình chính -> (Đăng xuất thì quay lại Đăng nhập)
+            while (true)
+            {
+                using (var login = ServiceProvider.GetRequiredService<GUI.Forms.Auth.LoginForm>())
+                {
+                    if (login.ShowDialog() != DialogResult.OK) break;   // đóng form đăng nhập = thoát
+                }
+
+                var main = ServiceProvider.GetRequiredService<GUI.Forms.Main.MainForm>();
+                Application.Run(main);
+                if (!main.LoggedOut) break;                             // bấm X ở MainForm = thoát hẳn
+            }
         }
     }
 }

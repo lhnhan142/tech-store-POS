@@ -19,6 +19,13 @@ namespace GUI.UserControls
         {
             InitializeComponent();
 
+            // PictureBox không tự dispose Image, tự giải phóng khi card bị hủy
+            Disposed += (s, e) =>
+            {
+                picImage.Image?.Dispose();
+                picImage.Image = null;
+            };
+
             // Ảnh vừa khung, không bị méo
             picImage.SizeMode = PictureBoxSizeMode.Zoom;
 

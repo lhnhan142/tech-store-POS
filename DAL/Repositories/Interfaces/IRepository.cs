@@ -19,6 +19,9 @@ namespace DAL.Repositories.Interfaces
         // Thêm mới
         Task AddAsync(T entity);
 
+        // Thêm nhiều bản ghi cùng lúc (dùng cho Import Excel)
+        Task AddRangeAsync(IEnumerable<T> entities);
+
         // Cập nhật (Sửa)
         void Update(T entity);
 
