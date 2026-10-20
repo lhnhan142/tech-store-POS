@@ -293,3 +293,242 @@ INSERT INTO OrderDetails (OrderId, ProductId, Quantity, UnitPrice) VALUES
 (7, 10, 1, 1450000),
 (8, 2, 3, 550000);
 GO
+
+
+-- =====================================================================
+-- 3. MODULE QUẢN LÝ HÓA ĐƠN & ĐỔI TRẢ (INVOICES & RETURNS)
+-- =====================================================================
+
+-- Bảng ReturnPolicies (Chính sách đổi trả cấu hình được)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ReturnPolicies')
+BEGIN
+    CREATE TABLE ReturnPolicies (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ReturnWindowDays INT NOT NULL DEFAULT 7,
+        ApprovalThresholdAmount DECIMAL(15,2) NOT NULL DEFAULT 5000000.00,
+        IsActive BIT NOT NULL DEFAULT 1,
+        UpdatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        UpdatedByUserId INT NULL,
+        CONSTRAINT FK_ReturnPolicies_Users FOREIGN KEY (UpdatedByUserId) REFERENCES Users(Id) ON DELETE SET NULL
+    );
+
+    INSERT INTO ReturnPolicies (ReturnWindowDays, ApprovalThresholdAmount, IsActive)
+    VALUES (7, 5000000.00, 1);
+END;
+
+-- Bảng Invoices (Hóa đơn bán lẻ & đổi hàng)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Invoices')
+BEGIN
+    CREATE TABLE Invoices (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        InvoiceNo NVARCHAR(50) NOT NULL UNIQUE,
+        OrderId INT NULL,
+        CustomerId INT NULL,
+        CreatedByUserId INT NOT NULL,
+        Status NVARCHAR(30) NOT NULL,
+        Type NVARCHAR(30) NOT NULL,
+        ParentInvoiceId INT NULL,
+        SubTotal DECIMAL(15,2) NOT NULL DEFAULT 0,
+        DiscountAmount DECIMAL(15,2) NOT NULL DEFAULT 0,
+        TotalAmount DECIMAL(15,2) NOT NULL DEFAULT 0,
+        CancelReason NVARCHAR(500) NULL,
+        CancelledAt DATETIME2 NULL,
+        CancelledByUserId INT NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        RowVersion ROWVERSION NOT NULL,
+        CONSTRAINT FK_Invoices_Orders FOREIGN KEY (OrderId) REFERENCES Orders(Id) ON DELETE SET NULL,
+        CONSTRAINT FK_Invoices_Customers FOREIGN KEY (CustomerId) REFERENCES Customers(Id) ON DELETE SET NULL,
+        CONSTRAINT FK_Invoices_CreatedByUser FOREIGN KEY (CreatedByUserId) REFERENCES Users(Id),
+        CONSTRAINT FK_Invoices_CancelledByUser FOREIGN KEY (CancelledByUserId) REFERENCES Users(Id),
+        CONSTRAINT FK_Invoices_ParentInvoice FOREIGN KEY (ParentInvoiceId) REFERENCES Invoices(Id)
+    );
+
+    CREATE INDEX IX_Invoices_CreatedAt ON Invoices(CreatedAt);
+    CREATE INDEX IX_Invoices_CustomerId ON Invoices(CustomerId);
+    CREATE INDEX IX_Invoices_Status ON Invoices(Status);
+END;
+
+-- Bảng InvoiceItems (Chi tiết dòng hàng trong hóa đơn)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'InvoiceItems')
+BEGIN
+    CREATE TABLE InvoiceItems (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        InvoiceId INT NOT NULL,
+        ProductId INT NOT NULL,
+        ProductName NVARCHAR(250) NOT NULL,
+        Qty INT NOT NULL,
+        UnitPrice DECIMAL(15,2) NOT NULL,
+        DiscountAlloc DECIMAL(15,2) NOT NULL DEFAULT 0,
+        LineTotal DECIMAL(15,2) NOT NULL,
+        ReturnedQty INT NOT NULL DEFAULT 0,
+        IsReturnable BIT NOT NULL DEFAULT 1,
+        RowVersion ROWVERSION NOT NULL,
+        CONSTRAINT CK_InvoiceItem_ReturnedQty CHECK (ReturnedQty <= Qty),
+        CONSTRAINT FK_InvoiceItems_Invoices FOREIGN KEY (InvoiceId) REFERENCES Invoices(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_InvoiceItems_Products FOREIGN KEY (ProductId) REFERENCES Products(Id)
+    );
+END;
+
+-- Bảng InvoicePayments (Bản ghi thanh toán hóa đơn)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'InvoicePayments')
+BEGIN
+    CREATE TABLE InvoicePayments (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        InvoiceId INT NOT NULL,
+        Method NVARCHAR(30) NOT NULL,
+        Amount DECIMAL(15,2) NOT NULL,
+        TransactionCode NVARCHAR(100) NULL,
+        Note NVARCHAR(500) NULL,
+        PaidAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CONSTRAINT FK_InvoicePayments_Invoices FOREIGN KEY (InvoiceId) REFERENCES Invoices(Id) ON DELETE CASCADE
+    );
+END;
+
+-- Bảng ReturnRequests (Yêu cầu đổi trả hàng)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ReturnRequests')
+BEGIN
+    CREATE TABLE ReturnRequests (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        RequestNo NVARCHAR(50) NOT NULL UNIQUE,
+        InvoiceId INT NOT NULL,
+        Type NVARCHAR(30) NOT NULL,
+        Channel NVARCHAR(30) NOT NULL,
+        Status NVARCHAR(30) NOT NULL,
+        ReasonCode NVARCHAR(50) NULL,
+        ReasonNote NVARCHAR(500) NULL,
+        TotalRefund DECIMAL(15,2) NOT NULL DEFAULT 0,
+        ExchangeInvoiceId INT NULL,
+        CreatedByUserId INT NOT NULL,
+        ApprovedByUserId INT NULL,
+        ApprovedAt DATETIME2 NULL,
+        ReceivedByUserId INT NULL,
+        ReceivedAt DATETIME2 NULL,
+        RejectReason NVARCHAR(500) NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        RowVersion ROWVERSION NOT NULL,
+        CONSTRAINT FK_ReturnRequests_Invoices FOREIGN KEY (InvoiceId) REFERENCES Invoices(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_ReturnRequests_ExchangeInvoice FOREIGN KEY (ExchangeInvoiceId) REFERENCES Invoices(Id),
+        CONSTRAINT FK_ReturnRequests_CreatedByUser FOREIGN KEY (CreatedByUserId) REFERENCES Users(Id),
+        CONSTRAINT FK_ReturnRequests_ApprovedByUser FOREIGN KEY (ApprovedByUserId) REFERENCES Users(Id),
+        CONSTRAINT FK_ReturnRequests_ReceivedByUser FOREIGN KEY (ReceivedByUserId) REFERENCES Users(Id)
+    );
+
+    CREATE INDEX IX_ReturnRequests_InvoiceId ON ReturnRequests(InvoiceId);
+    CREATE INDEX IX_ReturnRequests_Status ON ReturnRequests(Status);
+    CREATE INDEX IX_ReturnRequests_CreatedAt ON ReturnRequests(CreatedAt);
+END;
+
+-- Bảng ReturnItems (Chi tiết sản phẩm yêu cầu đổi trả)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ReturnItems')
+BEGIN
+    CREATE TABLE ReturnItems (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ReturnRequestId INT NOT NULL,
+        InvoiceItemId INT NOT NULL,
+        ProductId INT NOT NULL,
+        Qty INT NOT NULL,
+        Condition NVARCHAR(30) NOT NULL,
+        Restock BIT NOT NULL DEFAULT 1,
+        RefundAmount DECIMAL(15,2) NOT NULL DEFAULT 0,
+        CONSTRAINT FK_ReturnItems_ReturnRequests FOREIGN KEY (ReturnRequestId) REFERENCES ReturnRequests(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_ReturnItems_InvoiceItems FOREIGN KEY (InvoiceItemId) REFERENCES InvoiceItems(Id),
+        CONSTRAINT FK_ReturnItems_Products FOREIGN KEY (ProductId) REFERENCES Products(Id)
+    );
+END;
+
+-- Bảng ReturnAttachments (File/Ảnh đính kèm yêu cầu)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'ReturnAttachments')
+BEGIN
+    CREATE TABLE ReturnAttachments (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ReturnRequestId INT NOT NULL,
+        FilePath NVARCHAR(MAX) NOT NULL,
+        FileName NVARCHAR(255) NOT NULL,
+        UploadedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CONSTRAINT FK_ReturnAttachments_ReturnRequests FOREIGN KEY (ReturnRequestId) REFERENCES ReturnRequests(Id) ON DELETE CASCADE
+    );
+END;
+
+-- Bảng Refunds (Bản ghi hoàn tiền)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Refunds')
+BEGIN
+    CREATE TABLE Refunds (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ReturnRequestId INT NOT NULL,
+        InvoicePaymentId INT NULL,
+        Method NVARCHAR(30) NOT NULL,
+        Amount DECIMAL(15,2) NOT NULL,
+        RefundedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        ProcessedByUserId INT NOT NULL,
+        Note NVARCHAR(500) NULL,
+        CONSTRAINT FK_Refunds_ReturnRequests FOREIGN KEY (ReturnRequestId) REFERENCES ReturnRequests(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_Refunds_InvoicePayments FOREIGN KEY (InvoicePaymentId) REFERENCES InvoicePayments(Id),
+        CONSTRAINT FK_Refunds_Users FOREIGN KEY (ProcessedByUserId) REFERENCES Users(Id)
+    );
+END;
+
+-- Bảng StockMovements (Sổ theo dõi biến động kho)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'StockMovements')
+BEGIN
+    CREATE TABLE StockMovements (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        ProductId INT NOT NULL,
+        MovementType NVARCHAR(30) NOT NULL,
+        Quantity INT NOT NULL,
+        UnitPrice DECIMAL(15,2) NOT NULL DEFAULT 0,
+        ReferenceType NVARCHAR(50) NOT NULL,
+        ReferenceId INT NOT NULL,
+        Note NVARCHAR(500) NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CreatedByUserId INT NOT NULL,
+        CONSTRAINT FK_StockMovements_Products FOREIGN KEY (ProductId) REFERENCES Products(Id),
+        CONSTRAINT FK_StockMovements_Users FOREIGN KEY (CreatedByUserId) REFERENCES Users(Id)
+    );
+
+    CREATE INDEX IX_StockMovements_ProductId ON StockMovements(ProductId);
+    CREATE INDEX IX_StockMovements_MovementType ON StockMovements(MovementType);
+    CREATE INDEX IX_StockMovements_CreatedAt ON StockMovements(CreatedAt);
+    CREATE INDEX IX_StockMovements_Reference ON StockMovements(ReferenceType, ReferenceId);
+END;
+
+-- Bảng AuditLogs (Nhật ký kiểm toán thao tác)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AuditLogs')
+BEGIN
+    CREATE TABLE AuditLogs (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        Action NVARCHAR(50) NOT NULL,
+        EntityType NVARCHAR(100) NOT NULL,
+        EntityId INT NOT NULL,
+        OldValues NVARCHAR(MAX) NULL,
+        NewValues NVARCHAR(MAX) NULL,
+        UserId INT NOT NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        CONSTRAINT FK_AuditLogs_Users FOREIGN KEY (UserId) REFERENCES Users(Id)
+    );
+
+    CREATE INDEX IX_AuditLogs_Entity ON AuditLogs(EntityType, EntityId);
+    CREATE INDEX IX_AuditLogs_CreatedAt ON AuditLogs(CreatedAt);
+END;
+
+-- Dữ liệu mẫu ban đầu cho Hóa đơn (Invoices & InvoiceItems)
+IF NOT EXISTS (SELECT * FROM Invoices WHERE InvoiceNo = 'HD-2026-0001')
+BEGIN
+    INSERT INTO Invoices (InvoiceNo, OrderId, CustomerId, CreatedByUserId, Status, Type, SubTotal, DiscountAmount, TotalAmount, CreatedAt)
+    VALUES 
+    ('HD-2026-0001', 1, 1, 3, 'Paid', 'Sale', 1590000, 0, 1590000, DATEADD(day, -2, GETDATE())),
+    ('HD-2026-0002', 2, 3, 3, 'Paid', 'Sale', 3400000, 0, 3400000, DATEADD(day, -1, GETDATE())),
+    ('HD-2026-0003', 3, 4, 6, 'Paid', 'Sale', 2500000, 100000, 2400000, GETDATE());
+
+    INSERT INTO InvoiceItems (InvoiceId, ProductId, ProductName, Qty, UnitPrice, DiscountAlloc, LineTotal, ReturnedQty, IsReturnable)
+    VALUES
+    (1, 1, N'Chuột Logitech G102', 1, 390000, 0, 390000, 0, 1),
+    (1, 3, N'Bàn phím cơ Akko 3087', 1, 1200000, 0, 1200000, 0, 1),
+    (2, 11, N'Ổ cứng SSD Samsung 980 PRO 1TB PCIe 4.0', 1, 3400000, 0, 3400000, 0, 1),
+    (3, 9, N'Chuột không dây Logitech MX Master 3S', 1, 2500000, 100000, 2400000, 0, 1);
+
+    INSERT INTO InvoicePayments (InvoiceId, Method, Amount, PaidAt)
+    VALUES
+    (1, 'Cash', 1590000, DATEADD(day, -2, GETDATE())),
+    (2, 'Card', 3400000, DATEADD(day, -1, GETDATE())),
+    (3, 'Transfer', 2400000, GETDATE());
+END;
