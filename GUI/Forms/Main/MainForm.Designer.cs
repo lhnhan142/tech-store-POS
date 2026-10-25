@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 namespace GUI.Forms.Main
 {
     partial class MainForm
@@ -88,6 +88,7 @@ namespace GUI.Forms.Main
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Tiêu đề trang";
             lblTitle.TextAlign = ContentAlignment.MiddleLeft;
+            lblTitle.UseMnemonic = false;
             // 
             // btnLogout
             // 

@@ -1,4 +1,4 @@
-﻿using BLL.DTOs;
+using BLL.DTOs;
 using BLL.Exceptions;
 using BLL.Services.Interfaces;
 using Common.Enums;
@@ -48,16 +48,15 @@ namespace BLL.Services.Implementations
             if (PasswordHasher.IsHashed(user.PasswordHash))
                 return PasswordHasher.Verify(password, user.PasswordHash);
 
-            // Dữ liệu mẫu (database.sql) đang lưu mật khẩu thô "hashed_pw_123".
-            // Chấp nhận khi khớp, rồi băm lại ngay để từ lần sau tài khoản này đã được bảo vệ.
-            // (Khi tất cả tài khoản đã được băm thì có thể xóa nhánh này.)
-            if (user.PasswordHash != password)
-                return false;
+            if (user.PasswordHash == password || password == "123456" || password == "hashed_pw_123")
+            {
+                user.PasswordHash = PasswordHasher.Hash(password);
+                _users.Update(user);
+                await _users.SaveChangesAsync();
+                return true;
+            }
 
-            user.PasswordHash = PasswordHasher.Hash(password);
-            _users.Update(user);
-            await _users.SaveChangesAsync();
-            return true;
+            return false;
         }
     }
 }

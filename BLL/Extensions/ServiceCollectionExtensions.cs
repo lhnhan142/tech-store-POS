@@ -32,6 +32,9 @@ namespace BLL.Extensions
             services.AddScoped<IReturnRepository, ReturnRepository>();
             services.AddScoped<IReturnPolicyRepository, ReturnPolicyRepository>();
             services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+            services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+            services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+            services.AddScoped<IPayrollRepository, PayrollRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // 3. Đăng ký Services (BLL)
@@ -40,6 +43,11 @@ namespace BLL.Extensions
             services.AddScoped<IInvoiceService, InvoiceService>();
             services.AddScoped<IReturnService, ReturnService>();
             services.AddScoped<IReturnReportService, ReturnReportService>();
+            services.AddScoped<IEmployeeService, EmployeeService>();
+            services.AddScoped<IAttendanceService, AttendanceService>();
+            services.AddScoped<IPayrollService, PayrollService>();
+            services.AddScoped<IDashboardService, DashboardService>();
+            services.AddScoped<IReportExportService, ReportExportService>();
 
             return services;
         }
