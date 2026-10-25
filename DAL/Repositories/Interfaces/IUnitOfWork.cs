@@ -17,6 +17,10 @@ namespace DAL.Repositories.Interfaces
         IRepository<Product> Products { get; }
         IRepository<Customer> Customers { get; }
         IRepository<User> Users { get; }
+        IEmployeeRepository Employees { get; }
+        IAttendanceRepository Attendances { get; }
+        IPayrollRepository Payrolls { get; }
+        IRepository<PayrollDetail> PayrollDetails { get; }
 
         IRepository<T> Repository<T>() where T : class;
 

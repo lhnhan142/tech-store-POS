@@ -42,5 +42,25 @@ namespace BLL.Exceptions
         // ---- Không tìm thấy ----
         /// <summary>Không tìm thấy bản ghi yêu cầu.</summary>
         NotFound,
+
+        // ---- Nhân sự & Chấm công ----
+        /// <summary>Mã nhân viên đã tồn tại trong hệ thống.</summary>
+        DuplicateEmployeeCode,
+        /// <summary>Không tìm thấy thông tin nhân viên.</summary>
+        EmployeeNotFound,
+        /// <summary>Nhân viên đã check-in ca làm việc hôm nay.</summary>
+        AlreadyCheckedIn,
+        /// <summary>Chưa check-in, không thể check-out.</summary>
+        NotCheckedIn,
+        /// <summary>Thời gian check-out sớm hơn check-in.</summary>
+        InvalidCheckOutTime,
+
+        // ---- Bảng lương ----
+        /// <summary>Bảng lương tháng/năm này đã tồn tại.</summary>
+        DuplicatePayrollPeriod,
+        /// <summary>Bảng lương đã chốt, không được phép chỉnh sửa hoặc tính lại.</summary>
+        PayrollAlreadyFinalized,
+        /// <summary>Không tìm thấy bảng lương yêu cầu.</summary>
+        PayrollNotFound,
     }
 }
