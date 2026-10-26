@@ -46,6 +46,9 @@ namespace GUI
                     services.AddScoped<IReturnRepository, ReturnRepository>();
                     services.AddScoped<IReturnPolicyRepository, ReturnPolicyRepository>();
                     services.AddScoped<IStockMovementRepository, StockMovementRepository>();
+                    services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+                    services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+                    services.AddScoped<IPayrollRepository, PayrollRepository>();
                     services.AddScoped<IUnitOfWork, UnitOfWork>();
 
                     // 3. Services (BLL)
@@ -61,6 +64,11 @@ namespace GUI
                     services.AddScoped<IInvoiceService, InvoiceService>();
                     services.AddScoped<IReturnService, ReturnService>();
                     services.AddScoped<IReturnReportService, ReturnReportService>();
+                    services.AddScoped<IEmployeeService, EmployeeService>();
+                    services.AddScoped<IAttendanceService, AttendanceService>();
+                    services.AddScoped<IPayrollService, PayrollService>();
+                    services.AddScoped<IDashboardService, DashboardService>();
+                    services.AddScoped<IReportExportService, ReportExportService>();
                     services.AddSingleton<UserSession>();
                     services.AddSingleton<ICurrentUserService>(sp => sp.GetRequiredService<UserSession>());
                     services.AddSingleton(new ProductImageSettings
@@ -88,6 +96,13 @@ namespace GUI
                     services.AddTransient<GUI.Forms.InvoiceAndReturn.frmYeuCauDoiTra>();
                     services.AddTransient<GUI.Forms.InvoiceAndReturn.frmNhanHang>();
                     services.AddTransient<GUI.Forms.InvoiceAndReturn.frmBaoCaoDoiTra>();
+
+                    // 5. Member 5 Modules: HR, Attendance, Payroll, Dashboard, Reports
+                    services.AddTransient<GUI.Forms.HumanResource.EmployeeManagementForm>();
+                    services.AddTransient<GUI.Forms.HumanResource.AttendanceManagementForm>();
+                    services.AddTransient<GUI.Forms.HumanResource.PayrollManagementForm>();
+                    services.AddTransient<GUI.Forms.Dashboard.DashboardForm>();
+                    services.AddTransient<GUI.Forms.Reports.ReportManagementForm>();
                 })
                 .Build();
 

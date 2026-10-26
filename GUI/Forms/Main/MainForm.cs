@@ -52,9 +52,11 @@ namespace GUI.Forms.Main
                 new Page("Kho",      "Kiểm kê kho",          () => AsChild(_sp!.GetRequiredService<StockTakeForm>())),
                 new Page("Kho",      AlertPageText,          () => AsChild(_sp!.GetRequiredService<StockAlertForm>())),
                 new Page("Kho",      "Nhận hàng hoàn",       () => AsChild(_sp!.GetRequiredService<frmNhanHang>())),
-                new Page("Nhân sự",  "Nhân viên",            () => Placeholder("Quản lý nhân viên")),
-                new Page("Nhân sự",  "Chấm công",            () => Placeholder("Chấm công")),
-                new Page("Báo cáo",  "Báo cáo doanh thu",    () => Placeholder("Báo cáo doanh thu")),
+                new Page("Nhân sự",  "Nhân viên",            () => AsChild(_sp!.GetRequiredService<GUI.Forms.HumanResource.EmployeeManagementForm>())),
+                new Page("Nhân sự",  "Chấm công",            () => AsChild(_sp!.GetRequiredService<GUI.Forms.HumanResource.AttendanceManagementForm>())),
+                new Page("Nhân sự",  "Bảng lương",           () => AsChild(_sp!.GetRequiredService<GUI.Forms.HumanResource.PayrollManagementForm>())),
+                new Page("Báo cáo",  "Dashboard thống kê",   () => AsChild(_sp!.GetRequiredService<GUI.Forms.Dashboard.DashboardForm>())),
+                new Page("Báo cáo",  "Báo cáo & Xuất file",  () => AsChild(_sp!.GetRequiredService<GUI.Forms.Reports.ReportManagementForm>())),
                 new Page("Báo cáo",  "Báo cáo đổi trả",      () => AsChild(_sp!.GetRequiredService<frmBaoCaoDoiTra>())),
             });
 
@@ -76,9 +78,12 @@ namespace GUI.Forms.Main
         {
             foreach (var group in _pages.GroupBy(p => p.Group))
             {
-                var parent = new ToolStripMenuItem(group.Key);
+                var parent = new ToolStripMenuItem(group.Key.Replace("&", "&&"));
                 foreach (var p in group)
-                    parent.DropDownItems.Add(p.Text, null, (_, _) => NavigateTo(p));
+                {
+                    var item = new ToolStripMenuItem(p.Text.Replace("&", "&&"), null, (_, _) => NavigateTo(p));
+                    parent.DropDownItems.Add(item);
+                }
                 menuStrip.Items.Add(parent);
             }
         }
@@ -92,6 +97,7 @@ namespace GUI.Forms.Main
                 var btn = new Button
                 {
                     Text = p.Text,
+                    UseMnemonic = false,
                     Dock = DockStyle.Top,
                     Height = 46,
                     FlatStyle = FlatStyle.Flat,
