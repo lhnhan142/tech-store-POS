@@ -42,7 +42,7 @@ namespace GUI.Forms.Sales
             InitializeComponent();
 
             SetupGridPanel();
-            LoadFakeProducts();
+            LoadProducts();
             SetupCategoryChips();
             SetupSearch();
 
@@ -102,12 +102,54 @@ namespace GUI.Forms.Sales
 
         // ---------- Dữ liệu sản phẩm ----------
         // Dữ liệu giả theo SQL. Sau này thay bằng IProductService.
+        private void LoadProducts()
+        {
+            LoadFakeProducts();
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    if (Program.ServiceProvider != null)
+                    {
+                        using var scope = Program.ServiceProvider.CreateScope();
+                        var productService = scope.ServiceProvider.GetService<IProductService>();
+                        if (productService != null)
+                        {
+                            var dbProducts = await productService.GetAllAsync();
+                            if (dbProducts != null && dbProducts.Count > 0)
+                            {
+                                BeginInvoke(new Action(() =>
+                                {
+                                    _allProducts.Clear();
+                                    foreach (var p in dbProducts)
+                                    {
+                                        _allProducts.Add(new ProductItem(
+                                            p.Id,
+                                            p.Name,
+                                            p.Price,
+                                            p.StockQuantity,
+                                            p.CategoryId,
+                                            p.Barcode ?? "",
+                                            p.ImageUrl
+                                        ));
+                                    }
+                                    ApplyFilter();
+                                }));
+                            }
+                        }
+                    }
+                }
+                catch { }
+            });
+        }
+
         private void LoadFakeProducts()
         {
             // ĐỔI 3: thêm tên file ảnh ở cuối mỗi dòng
             _allProducts.AddRange(new[]
             {
-                new ProductItem(1,  "Chuột Logitech G102", 390000, 50, 1, "880123456789", "g102.jpg"),
+                new ProductItem(1,  "Chuột Logitech G102", 5000, 50, 1, "880123456789", "g102.jpg"),
                 new ProductItem(2,  "Chuột Razer DeathAdder Essential", 550000, 30, 1, "880123456790", "deathadder.jpg"),
                 new ProductItem(3,  "Bàn phím cơ Akko 3087", 1200000, 20, 2, "880123456791", "akko3087.jpg"),
                 new ProductItem(4,  "Bàn phím DareU EK810", 600000, 45, 2, "880123456792", "dareu-ek810.jpg"),
@@ -384,7 +426,7 @@ namespace GUI.Forms.Sales
 
             decimal total = CalcTotal();
 
-            using var frm = new PaymentForm(total);
+            using var frm = new PaymentForm(total, _cart, _discount, _tax);
             if (frm.ShowDialog(this) != DialogResult.OK) return;
 
             string invoiceNo = "";
