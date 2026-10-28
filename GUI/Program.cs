@@ -119,6 +119,7 @@ namespace GUI
                 Application.Run(new GUI.Forms.Sales.POSTestForm());
                 return;
             }
+
             if (args.Contains("--don-hang") || args.Contains("--invoice"))
             {
                 Application.Run(ServiceProvider.GetRequiredService<GUI.Forms.InvoiceAndReturn.frmDanhSachHoaDon>());
