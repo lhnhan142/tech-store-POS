@@ -15,6 +15,9 @@ namespace DAL.Repositories.Implementations
         private IReturnRepository? _returns;
         private IReturnPolicyRepository? _returnPolicies;
         private IStockMovementRepository? _stockMovements;
+        private IEmployeeRepository? _employees;
+        private IAttendanceRepository? _attendances;
+        private IPayrollRepository? _payrolls;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -25,6 +28,9 @@ namespace DAL.Repositories.Implementations
         public IReturnRepository Returns => _returns ??= new ReturnRepository(_context);
         public IReturnPolicyRepository ReturnPolicies => _returnPolicies ??= new ReturnPolicyRepository(_context);
         public IStockMovementRepository StockMovements => _stockMovements ??= new StockMovementRepository(_context);
+        public IEmployeeRepository Employees => _employees ??= new EmployeeRepository(_context);
+        public IAttendanceRepository Attendances => _attendances ??= new AttendanceRepository(_context);
+        public IPayrollRepository Payrolls => _payrolls ??= new PayrollRepository(_context);
 
         public IRepository<InvoiceItem> InvoiceItems => Repository<InvoiceItem>();
         public IRepository<InvoicePayment> InvoicePayments => Repository<InvoicePayment>();
@@ -35,6 +41,7 @@ namespace DAL.Repositories.Implementations
         public IRepository<Product> Products => Repository<Product>();
         public IRepository<Customer> Customers => Repository<Customer>();
         public IRepository<User> Users => Repository<User>();
+        public IRepository<PayrollDetail> PayrollDetails => Repository<PayrollDetail>();
 
         public IRepository<T> Repository<T>() where T : class
         {

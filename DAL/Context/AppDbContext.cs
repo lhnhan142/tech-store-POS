@@ -42,6 +42,11 @@ namespace DAL.Context
         public DbSet<StockMovement> StockMovements { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
 
+        // DbSets cho Module Quản lý Nhân sự & Tiền lương (Module 8 & 9)
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<Payroll> Payrolls { get; set; }
+        public DbSet<PayrollDetail> PayrollDetails { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

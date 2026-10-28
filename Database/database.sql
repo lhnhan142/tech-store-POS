@@ -1,4 +1,4 @@
--- ==========================================
+﻿-- ==========================================
 -- TẠO CƠ SỞ DỮ LIỆU
 -- ==========================================
 CREATE DATABASE PhuKienMayTinhDB;
@@ -201,15 +201,15 @@ INSERT INTO Roles (Name) VALUES (N'Admin'), (N'Quản lý'), (N'Nhân viên bán
 
 -- Thêm Tài khoản
 INSERT INTO Users (Username, PasswordHash, FullName, RoleId, Status) VALUES 
-('admin', 'hashed_pw_123', N'Quản trị viên', 1, 0),
-('quanly1', 'hashed_pw_123', N'Trần Văn Quản', 2, 0),
-('banhang1', 'hashed_pw_123', N'Nguyễn Thị Bán', 3, 0),
-('banhang2', 'hashed_pw_123', N'Lê Bán Hàng', 3, 0),
-('kho1', 'hashed_pw_123', N'Phạm Văn Kho', 4, 0),
-('banhang3', 'hashed_pw_123', N'Phạm Hoàng Long', 3, 0),
-('banhang4', 'hashed_pw_123', N'Đỗ Thị Mai', 3, 0),
-('kho2', 'hashed_pw_123', N'Vũ Ngọc Tuấn', 4, 0),
-('kho3', 'hashed_pw_123', N'Bùi Thanh Sơn', 4, 1);
+('admin', '123456', N'Quản trị viên', 1, 0),
+('quanly1', '123456', N'Trần Văn Quản', 2, 0),
+('banhang1', '123456', N'Nguyễn Thị Bán', 3, 0),
+('banhang2', '123456', N'Lê Bán Hàng', 3, 0),
+('kho1', '123456', N'Phạm Văn Kho', 4, 0),
+('banhang3', '123456', N'Phạm Hoàng Long', 3, 0),
+('banhang4', '123456', N'Đỗ Thị Mai', 3, 0),
+('kho2', '123456', N'Vũ Ngọc Tuấn', 4, 0),
+('kho3', '123456', N'Bùi Thanh Sơn', 4, 1);
 
 -- Thêm Danh mục
 INSERT INTO Categories (Name) VALUES 
@@ -532,3 +532,164 @@ BEGIN
     (2, 'Card', 3400000, DATEADD(day, -1, GETDATE())),
     (3, 'Transfer', 2400000, GETDATE());
 END;
+GO
+
+-- =====================================================================
+-- 4. MODULE QUẢN LÝ NHÂN SỰ, CHẤM CÔNG & TÍNH LƯƠNG (MODULE 8 & 9)
+-- =====================================================================
+
+-- Bảng Employees (Hồ sơ nhân viên)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Employees')
+BEGIN
+    CREATE TABLE Employees (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        EmployeeCode NVARCHAR(20) NOT NULL UNIQUE,
+        FullName NVARCHAR(100) NOT NULL,
+        DateOfBirth DATETIME2 NULL,
+        Gender NVARCHAR(10) NULL,
+        PhoneNumber NVARCHAR(20) NULL,
+        Email NVARCHAR(100) NULL,
+        Address NVARCHAR(250) NULL,
+        Position NVARCHAR(50) NOT NULL,
+        HireDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+        BaseSalary DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Allowance DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Status INT NOT NULL DEFAULT 0, -- 0: Active, 1: OnLeave, 2: Resigned
+        UserId INT NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        UpdatedAt DATETIME2 NULL,
+        CONSTRAINT FK_Employees_Users FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE SET NULL
+    );
+
+    CREATE INDEX IX_Employees_EmployeeCode ON Employees(EmployeeCode);
+    CREATE INDEX IX_Employees_Position ON Employees(Position);
+    CREATE INDEX IX_Employees_Status ON Employees(Status);
+END;
+GO
+
+-- Cập nhật cấu trúc bảng Attendances nếu chưa có các trường mở rộng
+IF COL_LENGTH('Attendances', 'EmployeeId') IS NULL
+BEGIN
+    ALTER TABLE Attendances ADD EmployeeId INT NULL;
+    ALTER TABLE Attendances ADD HoursWorked DECIMAL(5,2) NOT NULL DEFAULT 0;
+    ALTER TABLE Attendances ADD OvertimeHours DECIMAL(5,2) NOT NULL DEFAULT 0;
+    ALTER TABLE Attendances ADD Status INT NOT NULL DEFAULT 0; -- 0: Present, 1: Late, 2: EarlyLeave, 3: Overtime, 4: Absent
+    ALTER TABLE Attendances ADD Note NVARCHAR(250) NULL;
+    ALTER TABLE Attendances ADD CONSTRAINT FK_Attendances_Employees FOREIGN KEY (EmployeeId) REFERENCES Employees(Id);
+END;
+GO
+
+-- Bảng Payrolls (Bảng lương tháng)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Payrolls')
+BEGIN
+    CREATE TABLE Payrolls (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        PayrollCode NVARCHAR(30) NOT NULL UNIQUE,
+        Month INT NOT NULL,
+        Year INT NOT NULL,
+        StandardWorkDays INT NOT NULL DEFAULT 26,
+        TotalGrossAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+        TotalNetAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+        TotalEmployees INT NOT NULL DEFAULT 0,
+        Status INT NOT NULL DEFAULT 0, -- 0: Draft, 1: Finalized
+        Note NVARCHAR(250) NULL,
+        CreatedByUserId INT NOT NULL,
+        FinalizedAt DATETIME2 NULL,
+        FinalizedByUserId INT NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        UpdatedAt DATETIME2 NULL,
+        CONSTRAINT FK_Payrolls_CreatedByUser FOREIGN KEY (CreatedByUserId) REFERENCES Users(Id),
+        CONSTRAINT FK_Payrolls_FinalizedByUser FOREIGN KEY (FinalizedByUserId) REFERENCES Users(Id),
+        CONSTRAINT UQ_Payrolls_Month_Year UNIQUE (Month, Year)
+    );
+END;
+GO
+
+-- Bảng PayrollDetails (Chi tiết lương nhân viên)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'PayrollDetails')
+BEGIN
+    CREATE TABLE PayrollDetails (
+        Id INT IDENTITY(1,1) PRIMARY KEY,
+        PayrollId INT NOT NULL,
+        EmployeeId INT NOT NULL,
+        EmployeeCode NVARCHAR(20) NOT NULL,
+        EmployeeName NVARCHAR(100) NOT NULL,
+        Position NVARCHAR(50) NOT NULL,
+        BaseSalary DECIMAL(18,2) NOT NULL,
+        StandardWorkDays INT NOT NULL DEFAULT 26,
+        ActualWorkDays DECIMAL(5,2) NOT NULL DEFAULT 0,
+        TotalHoursWorked DECIMAL(6,2) NOT NULL DEFAULT 0,
+        OvertimeHours DECIMAL(5,2) NOT NULL DEFAULT 0,
+        SalaryByWorkDays DECIMAL(18,2) NOT NULL DEFAULT 0,
+        OvertimePay DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Allowance DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Bonus DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Deductions DECIMAL(18,2) NOT NULL DEFAULT 0,
+        NetSalary DECIMAL(18,2) NOT NULL DEFAULT 0,
+        Note NVARCHAR(250) NULL,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+        UpdatedAt DATETIME2 NULL,
+        CONSTRAINT FK_PayrollDetails_Payrolls FOREIGN KEY (PayrollId) REFERENCES Payrolls(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_PayrollDetails_Employees FOREIGN KEY (EmployeeId) REFERENCES Employees(Id),
+        CONSTRAINT UQ_PayrollDetails_Payroll_Employee UNIQUE (PayrollId, EmployeeId)
+    );
+END;
+GO
+
+-- =====================================================================
+-- 5. MOCK DATA NHÂN VIÊN, CHẤM CÔNG & BẢNG LƯƠNG
+-- =====================================================================
+
+-- Thêm Hồ sơ nhân viên tương ứng với 9 tài khoản User có sẵn
+IF NOT EXISTS (SELECT * FROM Employees WHERE EmployeeCode = 'NV001')
+BEGIN
+    INSERT INTO Employees (EmployeeCode, FullName, DateOfBirth, Gender, PhoneNumber, Email, Address, Position, HireDate, BaseSalary, Allowance, Status, UserId)
+    VALUES
+    ('NV001', N'Quản trị viên', '1990-01-15', N'Nam', '0909000001', 'admin@techstore.vn', N'Quận 1, TP.HCM', N'Giám đốc điều hành', '2023-01-01', 25000000, 3000000, 0, 1),
+    ('NV002', N'Trần Văn Quản', '1993-05-20', N'Nam', '0909000002', 'quanly1@techstore.vn', N'Quận 3, TP.HCM', N'Quản lý cửa hàng', '2023-03-15', 18000000, 2000000, 0, 2),
+    ('NV003', N'Nguyễn Thị Bán', '1998-08-10', N'Nữ', '0909000003', 'banhang1@techstore.vn', N'Bình Thạnh, TP.HCM', N'Nhân viên bán hàng', '2023-06-01', 8500000, 1000000, 0, 3),
+    ('NV004', N'Lê Bán Hàng', '1999-11-25', N'Nam', '0909000004', 'banhang2@techstore.vn', N'Phú Nhuận, TP.HCM', N'Nhân viên bán hàng', '2023-08-10', 8000000, 1000000, 0, 4),
+    ('NV005', N'Phạm Văn Kho', '1995-02-18', N'Nam', '0909000005', 'kho1@techstore.vn', N'Tân Bình, TP.HCM', N'Thủ kho trưởng', '2023-04-01', 11000000, 1500000, 0, 5),
+    ('NV006', N'Phạm Hoàng Long', '1997-07-14', N'Nam', '0909000006', 'banhang3@techstore.vn', N'Gò Vấp, TP.HCM', N'Nhân viên bán hàng', '2023-09-01', 8500000, 1000000, 0, 6),
+    ('NV007', N'Đỗ Thị Mai', '2000-03-08', N'Nữ', '0909000007', 'banhang4@techstore.vn', N'Quận 10, TP.HCM', N'Nhân viên thu ngân', '2024-01-15', 8000000, 800000, 0, 7),
+    ('NV008', N'Vũ Ngọc Tuấn', '1996-09-30', N'Nam', '0909000008', 'kho2@techstore.vn', N'Quận 12, TP.HCM', N'Nhân viên kho', '2023-10-01', 9000000, 1000000, 0, 8),
+    ('NV009', N'Bùi Thanh Sơn', '1994-12-12', N'Nam', '0909000009', 'kho3@techstore.vn', N'Tân Phú, TP.HCM', N'Nhân viên kho', '2023-05-15', 9000000, 1000000, 1, 9);
+END;
+GO
+
+-- Cập nhật dữ liệu mẫu Chấm công cho tháng hiện tại
+IF NOT EXISTS (SELECT * FROM Attendances WHERE EmployeeId IS NOT NULL)
+BEGIN
+    -- Gán EmployeeId cho các bản ghi cũ nếu có
+    UPDATE a SET a.EmployeeId = e.Id
+    FROM Attendances a JOIN Employees e ON a.UserId = e.UserId;
+
+    -- Thêm chấm công mẫu cho các ngày gần đây
+    INSERT INTO Attendances (UserId, EmployeeId, Date, CheckIn, CheckOut, HoursWorked, OvertimeHours, Status, Note)
+    VALUES
+    (3, 3, CAST(GETDATE() AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (4, 4, CAST(GETDATE() AS DATE), '08:15', '17:00', 7.75, 0, 1, N'Đi muộn 15p'),
+    (5, 5, CAST(GETDATE() AS DATE), '07:55', '19:00', 9.0, 2.0, 3, N'Tăng ca kiểm kho'),
+    (6, 6, CAST(GETDATE() AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (7, 7, CAST(GETDATE() AS DATE), '08:05', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (8, 8, CAST(GETDATE() AS DATE), '07:50', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+
+    -- Ngày hôm qua
+    (3, 3, CAST(DATEADD(day, -1, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (4, 4, CAST(DATEADD(day, -1, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (5, 5, CAST(DATEADD(day, -1, GETDATE()) AS DATE), '08:00', '17:30', 8.5, 0.5, 3, N'Tăng ca nhập hàng'),
+    (6, 6, CAST(DATEADD(day, -1, GETDATE()) AS DATE), '08:00', '16:00', 7.0, 0, 2, N'Về sớm việc gia đình'),
+    (7, 7, CAST(DATEADD(day, -1, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (8, 8, CAST(DATEADD(day, -1, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+
+    -- Ngày hôm kia
+    (3, 3, CAST(DATEADD(day, -2, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (4, 4, CAST(DATEADD(day, -2, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (5, 5, CAST(DATEADD(day, -2, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (6, 6, CAST(DATEADD(day, -2, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (7, 7, CAST(DATEADD(day, -2, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ'),
+    (8, 8, CAST(DATEADD(day, -2, GETDATE()) AS DATE), '08:00', '17:00', 8.0, 0, 0, N'Đúng giờ');
+END;
+GO
+
+

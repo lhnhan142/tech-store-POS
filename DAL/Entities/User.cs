@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Common.Enums;
@@ -26,5 +26,6 @@ namespace DAL.Entities
         public AccountStatus Status { get; set; }
 
         public ICollection<Attendance>? Attendances { get; set; }
+        public Employee? Employee { get; set; }
     }
 }
