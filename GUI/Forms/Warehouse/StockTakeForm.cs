@@ -23,6 +23,7 @@ namespace GUI.Forms.Warehouse
         private IReadOnlyList<ProductStockDTO> _products = Array.Empty<ProductStockDTO>();
 
         private const int ColActual = 3;   // vị trí cột "Thực tế" trong LineGrid
+        private bool _returnToScan;        // vừa quét mã: nhập xong số thực tế thì trả con trỏ về ô quét
 
         public StockTakeForm(IServiceScopeFactory scopeFactory) : base(scopeFactory)
         {
@@ -81,7 +82,7 @@ namespace GUI.Forms.Warehouse
             _cboProduct.ValueMember = nameof(ProductStockDTO.Id);
 
             AddEditorRow(FieldRow((Field("Ngày kiểm kê *", _dtpDate), 35), (Field("Ghi chú", _txtNote), 65)), 64);
-            AddEditorRow(FieldRow((Field("Thêm riêng một sản phẩm", _cboProduct), 100)), 64);
+            AddEditorRow(FieldRow((ScanField(OnScan), 45), (Field("Thêm riêng một sản phẩm", _cboProduct), 55)), 64);
 
             ConfigButton(_btnAddLine, "Thêm sản phẩm", HopeButtonType.Primary, (_, _) => AddSelectedProduct());
             ConfigButton(_btnLoadAll, "Nạp tất cả sản phẩm", HopeButtonType.Primary, (_, _) => LoadAllProducts());
@@ -107,6 +108,7 @@ namespace GUI.Forms.Warehouse
             {
                 if (e.RowIndex >= 0) LineGrid.InvalidateRow(e.RowIndex);   // vẽ lại cột Chênh lệch
                 UpdateSummary();
+                if (_returnToScan) { _returnToScan = false; ScanBox.Focus(); }
             };
             LineGrid.CellFormatting += ColorDifference;
             LineGrid.KeyDown += (_, e) =>
@@ -156,6 +158,29 @@ namespace GUI.Forms.Warehouse
                 _lines.Add(NewLine(p));
             _lines.RaiseListChangedEvents = true;
             _lines.ResetBindings();
+        }
+
+        // Quét mã: tìm dòng của sản phẩm trong phiếu (chưa có thì thêm), nhảy tới ô "Thực tế" để gõ số đếm được.
+        private bool OnScan(string code)
+        {
+            var product = FindByCode(_products, code);
+            if (product is null) return false;
+
+            var line = _lines.FirstOrDefault(l => l.ProductId == product.Id);
+            if (line is null)
+            {
+                line = NewLine(product);
+                _lines.Add(line);
+            }
+
+            int index = _lines.IndexOf(line);
+            LineGrid.ClearSelection();
+            LineGrid.CurrentCell = LineGrid.Rows[index].Cells[ColActual];
+            LineGrid.Rows[index].Selected = true;
+            _returnToScan = true;
+            LineGrid.Focus();
+            LineGrid.BeginEdit(true);
+            return true;
         }
 
         private void AddSelectedProduct()

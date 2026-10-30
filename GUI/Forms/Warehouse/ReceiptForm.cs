@@ -20,6 +20,7 @@ namespace GUI.Forms.Warehouse
         private readonly HopeRoundButton _btnAddLine = new();
         private readonly HopeRoundButton _btnRemoveLine = new();
         private readonly BindingList<ReceiptLineItem> _lines = new();
+        private IReadOnlyList<ProductStockDTO> _products = Array.Empty<ProductStockDTO>();
 
         public ReceiptForm(IServiceScopeFactory scopeFactory) : base(scopeFactory)
         {
@@ -89,11 +90,21 @@ namespace GUI.Forms.Warehouse
             _nudPrice.ThousandsSeparator = true;
             _nudPrice.TextAlign = HorizontalAlignment.Right;
 
-            AddEditorRow(FieldRow((Field("Nhà cung cấp *", _cboSupplier), 60), (Field("Ngày nhập *", _dtpDate), 40)), 64);
+            AddEditorRow(FieldRow((Field("Nhà cung cấp *", _cboSupplier), 30), (Field("Ngày nhập *", _dtpDate), 40), (ScanField(OnScan), 30)), 64);
             AddEditorRow(FieldRow(
                 (Field("Sản phẩm *", _cboProduct), 50),
                 (Field("Số lượng *", _nudQty), 18),
                 (Field("Đơn giá nhập (₫) *", _nudPrice), 32)), 64);
+
+            // Enter ở ô số lượng / đơn giá = thêm dòng (tiện khi vừa quét mã xong)
+            foreach (var nud in new[] { _nudQty, _nudPrice })
+                nud.KeyDown += (_, e) =>
+                {
+                    if (e.KeyCode != Keys.Enter) return;
+                    e.SuppressKeyPress = true;
+                    e.Handled = true;
+                    AddLine();
+                };
 
             ConfigButton(_btnAddLine, "Thêm vào phiếu", HopeButtonType.Primary, (_, _) => AddLine());
             ConfigButton(_btnRemoveLine, "Xóa dòng đã chọn", HopeButtonType.Danger, (_, _) => RemoveSelectedLine());
@@ -118,6 +129,7 @@ namespace GUI.Forms.Warehouse
             var suppliers = await Run<ISupplierService, IReadOnlyList<Supplier>>(s => s.GetAllAsync());
             var products = await Run<IInventoryService, IReadOnlyList<ProductStockDTO>>(s => s.GetProductsAsync());
 
+            _products = products;
             _cboSupplier.DataSource = suppliers.ToList();
             _cboSupplier.SelectedIndex = -1;
             _cboProduct.DataSource = products.ToList();
@@ -135,6 +147,31 @@ namespace GUI.Forms.Warehouse
             _nudPrice.Value = 0;
             UpdateSummary();
             _cboSupplier.Focus();
+        }
+
+        // ------------------------------------------------------------ Quét mã
+        // Sản phẩm đã có trong phiếu: quét thêm = cộng thêm số lượng đang nhập, giữ đơn giá của dòng đó.
+        // Sản phẩm mới: chọn sản phẩm rồi chuyển con trỏ sang ô đơn giá để nhập giá (Enter để thêm dòng).
+        private bool OnScan(string code)
+        {
+            var product = FindByCode(_products, code);
+            if (product is null) return false;
+
+            _cboProduct.SelectedItem = product;
+            var existing = _lines.FirstOrDefault(l => l.ProductId == product.Id);
+            if (existing is not null)
+            {
+                _nudPrice.Value = existing.UnitPrice;
+                AddLine();
+                ScanBox.Focus();
+            }
+            else
+            {
+                _nudPrice.Value = 0;
+                _nudPrice.Focus();
+                _nudPrice.Select(0, _nudPrice.Text.Length);
+            }
+            return true;
         }
 
         // ------------------------------------------------------------ Thao tác dòng

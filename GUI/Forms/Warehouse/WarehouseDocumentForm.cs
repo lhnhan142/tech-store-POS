@@ -564,8 +564,49 @@ namespace GUI.Forms.Warehouse
         protected virtual void SetBusy(bool busy)
         {
             BtnSave.Enabled = BtnReset.Enabled = _btnFilter.Enabled = !busy;
+            ScanBox.Enabled = !busy;
             UseWaitCursor = busy;
         }
+
+        // ------------------------------------------------ Quét mã vạch / QR (KAN-22)
+        private const string ScanHint = "Quét mã tại đây";
+
+        /// <summary>Ô nhận mã từ máy quét. Máy quét USB (cả mã vạch lẫn QR) gõ mã như bàn phím rồi gửi Enter.</summary>
+        protected readonly TextBox ScanBox = new();
+
+        /// <summary>
+        /// Tạo ô quét mã có nhãn. <paramref name="onScan"/> nhận mã đã cắt khoảng trắng và trả về
+        /// false nếu không tìm thấy sản phẩm (ô quét sẽ kêu bíp và báo ngay trong ô, không bật hộp thoại để không làm gián đoạn việc quét).
+        /// </summary>
+        protected Control ScanField(Func<string, bool> onScan)
+        {
+            ScanBox.MaxLength = 100;
+            ScanBox.PlaceholderText = ScanHint;
+            ScanBox.KeyDown += (_, e) =>
+            {
+                if (e.KeyCode != Keys.Enter) return;
+                e.SuppressKeyPress = true;   // tránh tiếng "ding" của Windows
+                e.Handled = true;
+
+                var code = ScanBox.Text.Trim();
+                ScanBox.Clear();
+                if (code.Length == 0) return;
+
+                if (onScan(code))
+                    ScanBox.PlaceholderText = ScanHint;
+                else
+                {
+                    System.Media.SystemSounds.Beep.Play();
+                    ScanBox.PlaceholderText = $"Không có mã '{code}'";
+                }
+            };
+            return Field("Quét mã vạch / QR", ScanBox);
+        }
+
+        /// <summary>Tìm sản phẩm theo mã vạch (không phân biệt hoa thường). Trả về null nếu không có.</summary>
+        protected static ProductStockDTO? FindByCode(IEnumerable<ProductStockDTO> products, string code) =>
+            products.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.Barcode)
+                                         && string.Equals(p.Barcode.Trim(), code, StringComparison.OrdinalIgnoreCase));
 
         // Mỗi thao tác dùng một scope (một DbContext) riêng để dữ liệu luôn mới
         protected async Task<TResult> Run<TService, TResult>(Func<TService, Task<TResult>> action) where TService : notnull

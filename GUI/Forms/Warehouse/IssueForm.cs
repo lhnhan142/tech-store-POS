@@ -28,6 +28,7 @@ namespace GUI.Forms.Warehouse
         private readonly HopeRoundButton _btnAddLine = new();
         private readonly HopeRoundButton _btnRemoveLine = new();
         private readonly BindingList<IssueLineItem> _lines = new();
+        private IReadOnlyList<ProductStockDTO> _products = Array.Empty<ProductStockDTO>();
 
         public IssueForm(IServiceScopeFactory scopeFactory) : base(scopeFactory)
         {
@@ -92,7 +93,7 @@ namespace GUI.Forms.Warehouse
             _nudQty.TextAlign = HorizontalAlignment.Right;
 
             AddEditorRow(FieldRow((Field("Lý do xuất kho *", _cboReason), 60), (Field("Ngày xuất *", _dtpDate), 40)), 64);
-            AddEditorRow(FieldRow((Field("Ghi chú", _txtNote), 100)), 64);
+            AddEditorRow(FieldRow((Field("Ghi chú", _txtNote), 50), (ScanField(OnScan), 50)), 64);
             AddEditorRow(FieldRow((Field("Sản phẩm *", _cboProduct), 75), (Field("Số lượng *", _nudQty), 25)), 64);
 
             ConfigButton(_btnAddLine, "Thêm vào phiếu", HopeButtonType.Primary, (_, _) => AddLine());
@@ -116,6 +117,7 @@ namespace GUI.Forms.Warehouse
         protected override async Task LoadLookupsAsync()
         {
             var products = await Run<IInventoryService, IReadOnlyList<ProductStockDTO>>(s => s.GetProductsAsync());
+            _products = products;
             _cboProduct.DataSource = products.ToList();
             _cboProduct.SelectedIndex = -1;
         }
@@ -132,6 +134,20 @@ namespace GUI.Forms.Warehouse
             _nudQty.Value = 1;
             UpdateSummary();
             _cboReason.Focus();
+        }
+
+        // ------------------------------------------------------------ Quét mã
+        // Mỗi lần quét = thêm số lượng đang nhập (mặc định 1) của sản phẩm đó vào phiếu;
+        // quét lại cùng sản phẩm thì cộng dồn. AddLine() vẫn kiểm tra vượt tồn kho.
+        private bool OnScan(string code)
+        {
+            var product = FindByCode(_products, code);
+            if (product is null) return false;
+
+            _cboProduct.SelectedItem = product;
+            AddLine();
+            ScanBox.Focus();
+            return true;
         }
 
         // ------------------------------------------------------------ Thao tác dòng
