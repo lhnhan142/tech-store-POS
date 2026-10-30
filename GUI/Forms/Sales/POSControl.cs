@@ -34,7 +34,10 @@ namespace GUI.Forms.Sales
         private readonly System.Windows.Forms.Timer _searchTimer = new() { Interval = 300 };
         private Panel pnlGrid = null!;       // thay cho flpProducts, xếp thẻ bằng tọa độ
         private int _selectedCategoryId = 0; // 0 = Tất cả
-        private decimal _discount = 0;       // sau này lấy từ ô giảm giá
+        private decimal _discount = 0;       // Tiền giảm giá thực tế (VNĐ)
+        private decimal _discountPercent = 0; // % giảm giá nếu áp dụng theo %
+        private bool _isDiscountPercent = false; // Đang giảm theo % hay VNĐ
+        private string _discountReason = ""; // Ghi chú / lý do giảm giá
         private decimal _tax = 0;            // sau này tính theo cấu hình VAT
 
         public POSControl()
@@ -45,6 +48,7 @@ namespace GUI.Forms.Sales
             LoadProducts();
             SetupCategoryChips();
             SetupSearch();
+            SetupDiscountInteractions();
 
             flpCart.Resize += (s, e) => ResizeCartItems();
             btnPay.Click += BtnPay_Click;
@@ -399,12 +403,69 @@ namespace GUI.Forms.Sales
             flpCart.ResumeLayout();
 
             decimal subtotal = _cart.Sum(x => x.LineTotal);
-            decimal total = Math.Max(0, subtotal - _discount + _tax);
+            // Tự động tính lại tiền giảm theo subtotal mới nếu giảm theo %
+            if (_isDiscountPercent && _discountPercent > 0)
+            {
+                _discount = Math.Round(subtotal * (_discountPercent / 100m), 0);
+            }
+            else
+            {
+                _discount = Math.Min(_discount, subtotal);
+            }
 
+            decimal total = Math.Max(0, subtotal - _discount + _tax);
             lblSubtotal.Text = Money(subtotal);
-            lblDiscount.Text = _discount > 0 ? "-" + Money(_discount) : Money(0);
+            if (_discount > 0)
+            {
+                lblDiscount.Text = _isDiscountPercent
+                    ? $"-{Money(_discount)} ({_discountPercent:0.#}%) ✎"
+                    : $"-{Money(_discount)} ✎";
+                lblDiscount.ForeColor = Color.FromArgb(220, 38, 38);
+            }
+            else
+            {
+                lblDiscount.Text = "0đ ✎";
+                lblDiscount.ForeColor = Color.FromArgb(0, 112, 243);
+            }
+
             lblTax.Text = Money(_tax);
             lblTotal.Text = Money(total);
+        }
+
+
+        // ---------- Xử lý giảm giá ----------
+        private void SetupDiscountInteractions()
+        {
+            lblDiscountText.Cursor = Cursors.Hand;
+            lblDiscount.Cursor = Cursors.Hand;
+
+            var tip = new ToolTip();
+            tip.SetToolTip(lblDiscountText, "Nhấp vào để nhập hoặc thay đổi mức giảm giá (% hoặc VNĐ)");
+            tip.SetToolTip(lblDiscount, "Nhấp vào để nhập hoặc thay đổi mức giảm giá (% hoặc VNĐ)");
+
+            lblDiscountText.Click += (s, e) => OpenDiscountDialog();
+            lblDiscount.Click += (s, e) => OpenDiscountDialog();
+        }
+
+        private void OpenDiscountDialog()
+        {
+            if (_cart.Count == 0)
+            {
+                MessageBox.Show("Vui lòng thêm sản phẩm vào giỏ hàng trước khi áp dụng giảm giá.",
+                    "Giảm giá", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            decimal subtotal = _cart.Sum(x => x.LineTotal);
+            using var dlg = new DiscountDialog(subtotal, _discount, _discountPercent, _isDiscountPercent, _discountReason);
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                _isDiscountPercent = dlg.IsPercent;
+                _discountPercent = dlg.DiscountPercent;
+                _discount = dlg.DiscountAmount;
+                _discountReason = dlg.Reason;
+                RefreshCart();
+            }
         }
 
         private void ResizeCartItems()
@@ -438,23 +499,53 @@ namespace GUI.Forms.Sales
                     var invoiceService = scope.ServiceProvider.GetRequiredService<IInvoiceService>();
 
                     decimal subtotal = _cart.Sum(x => x.LineTotal);
+
+                    // Phân bổ giảm giá xuống từng dòng theo tỷ lệ LineTotal / SubTotal
+                    var invoiceItems = new List<CreateSaleInvoiceItemDto>();
+                    decimal remainingDiscount = _discount;
+
+                    for (int itemIdx = 0; itemIdx < _cart.Count; itemIdx++)
+                    {
+                        var item = _cart[itemIdx];
+                        decimal itemSubtotal = item.LineTotal;
+                        decimal alloc = 0;
+
+                        if (subtotal > 0 && _discount > 0)
+                        {
+                            if (itemIdx == _cart.Count - 1)
+                            {
+                                alloc = Math.Max(0, remainingDiscount);
+                            }
+                            else
+                            {
+                                alloc = Math.Round(_discount * (itemSubtotal / subtotal), 0);
+                                alloc = Math.Min(alloc, remainingDiscount);
+                                remainingDiscount -= alloc;
+                            }
+                        }
+
+                        decimal lineTotal = Math.Max(0, itemSubtotal - alloc);
+
+                        invoiceItems.Add(new CreateSaleInvoiceItemDto(
+                            ProductId: item.ProductId,
+                            ProductName: item.Name,
+                            Qty: item.Quantity,
+                            UnitPrice: item.UnitPrice,
+                            DiscountAlloc: alloc,
+                            LineTotal: lineTotal
+                        ));
+                    }
+
                     var dto = new CreateSaleInvoiceDto(
                         CustomerId: 1, // Khách hàng mặc định trong CSDL (Nguyễn Văn A)
                         SubTotal: subtotal,
                         DiscountAmount: _discount,
                         TotalAmount: total,
                         PaymentMethod: frm.SelectedMethod,
-                        Items: _cart.Select(c => new CreateSaleInvoiceItemDto(
-                            ProductId: c.ProductId,
-                            ProductName: c.Name,
-                            Qty: c.Quantity,
-                            UnitPrice: c.UnitPrice,
-                            DiscountAlloc: 0,
-                            LineTotal: c.LineTotal
-                        )).ToList()
+                        Items: invoiceItems
                     );
 
-                    invoiceNo = await invoiceService.CreateSaleInvoiceAsync(dto);
+invoiceNo = await invoiceService.CreateSaleInvoiceAsync(dto);
                 }
             }
             catch (Exception ex)
@@ -473,6 +564,10 @@ namespace GUI.Forms.Sales
                 "Thanh toán hoàn tất", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             _cart.Clear();
+            _discount = 0;
+            _discountPercent = 0;
+            _isDiscountPercent = false;
+            _discountReason = "";
             RefreshCart();
         }
 
